@@ -2,6 +2,8 @@ from ConfigParser import ConfigParser
 
 from falcon import API
 
+from tas.resources import ProcessText
+
 
 def load_settings(settings_file):
     config_parser = ConfigParser()
@@ -13,7 +15,9 @@ def load_settings(settings_file):
 
 
 def load_resources(settings, app):
-    pass
+    process_text_resource = ProcessText()
+
+    app.add_route("/api/v1/process", process_text_resource)
 
 
 def create_app(settings_file):

@@ -8,7 +8,8 @@ setup(
     zip_safe=False,
     install_requires=[
         "goose-extractor==1.0.25",
-        "falcon==1.1.0"
+        "falcon==1.1.0",
+        "beautifulsoup4==4.5.1"
     ],
     test_suite="nose.collector",
     tests_require=[
