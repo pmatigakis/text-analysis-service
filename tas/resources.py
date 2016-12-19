@@ -3,6 +3,7 @@ import json
 from falcon import HTTP_200, HTTPBadRequest
 from goose import Goose
 from bs4 import BeautifulSoup
+from opengraph import OpenGraph
 
 
 class ProcessHTML(object):
@@ -34,6 +35,16 @@ class ProcessHTML(object):
 
         return response
 
+    def _extract_opengraph_data(self, request_body):
+        opengraph = OpenGraph()
+
+        opengraph.parser(request_body)
+
+        if opengraph.is_valid():
+            return opengraph
+        else:
+            return {"error": "failed to extract OpenGraph data"}
+
     def on_post(self, req, resp):
         if req.content_length in (None, 0):
             raise HTTPBadRequest('Invalid request body',
@@ -52,6 +63,7 @@ class ProcessHTML(object):
         try:
             content = self._extract_page_content(body)
             page_data = self._extract_page_data(body)
+            opengraph_data = self._extract_opengraph_data(body)
 
             resp.status = HTTP_200
 
@@ -61,7 +73,10 @@ class ProcessHTML(object):
 
             resp.body = json.dumps(
                 {
-                    "content": content_response
+                    "content": content_response,
+                    "social": {
+                        "opengraph": opengraph_data
+                    }
                 }
             )
         except Exception:
