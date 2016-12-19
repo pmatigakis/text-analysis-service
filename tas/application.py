@@ -3,6 +3,7 @@ from ConfigParser import ConfigParser
 from falcon import API
 
 from tas.resources import ProcessHTML
+from tas.middleware import TokenAuthentication
 
 
 def load_settings(settings_file):
@@ -23,7 +24,9 @@ def load_resources(settings, app):
 def create_app(settings_file):
     settings = load_settings(settings_file)
 
-    app = API()
+    middleware = [TokenAuthentication()]
+
+    app = API(middleware=middleware)
 
     load_resources(settings, app)
 
