@@ -2,7 +2,7 @@ from ConfigParser import ConfigParser
 
 from falcon import API
 
-from tas.resources import ProcessText
+from tas.resources import ProcessHTML
 
 
 def load_settings(settings_file):
@@ -15,7 +15,7 @@ def load_settings(settings_file):
 
 
 def load_resources(settings, app):
-    process_text_resource = ProcessText()
+    process_text_resource = ProcessHTML()
 
     app.add_route("/api/v1/process", process_text_resource)
 

@@ -5,63 +5,65 @@ from goose import Goose
 from bs4 import BeautifulSoup
 
 
-class ProcessText(object):
+class ProcessHTML(object):
     def __init__(self):
         self.goose = Goose()
 
-    def _extract_content(self, content):
+    def _extract_page_content(self, request_body):
         try:
-            article = self.goose.extract(raw_html=content)
+            article = self.goose.extract(raw_html=request_body)
         except Exception:
             return {"error": "failed to extract content"}
 
-        response = {}
-
         if article is None:
-            response["text"] = None
+            content = None
         else:
-            response["text"] = article.cleaned_text
+            content = article.cleaned_text
 
-        soup = BeautifulSoup(content, "html.parser")
+        return {"text": content}
+
+    def _extract_page_data(self, request_body):
+        soup = BeautifulSoup(request_body, "html.parser")
+
+        response = {}
 
         title = soup.find("title")
         if title:
             response["title"] = title.text
+            response["content-length"] = len(request_body)
 
         return response
 
     def on_post(self, req, resp):
-        extract_html = req.get_param_as_bool("extract_html") or False
-
         if req.content_length in (None, 0):
             raise HTTPBadRequest('Invalid request body',
                                  'The content length of the body is not valid')
         elif req.content_length > 250000:
             raise HTTPBadRequest('Invalid request body',
                                  'The body is very large')
-        elif req.content_type != "application/json":
-            raise HTTPBadRequest('Invalid request body',
-                                 'Body content type is not JSON')
 
         body = req.stream.read()
         if not body:
             raise HTTPBadRequest('Empty request body',
-                                 'A valid JSON document is required.')
+                                 'The contents of a web page must be provided')
+
+        resp.content_type = "application/json"
 
         try:
-            body = json.loads(body)
+            content = self._extract_page_content(body)
+            page_data = self._extract_page_data(body)
+
+            resp.status = HTTP_200
+
+            content_response = {}
+            content_response.update(content)
+            content_response.update(page_data)
+
+            resp.body = json.dumps(
+                {
+                    "content": content_response
+                }
+            )
         except Exception:
-            raise HTTPBadRequest('Invalid request body',
-                                 'Failed to decode body')
-
-        response = {}
-
-        if extract_html:
-            try:
-                response["content"] = self._extract_content(body["content"])
-            except Exception:
-                response["content"] = {"error": "failed to process content"}
-
-        resp.body = json.dumps({"result": response})
-        resp.status = HTTP_200
-        resp.content_type = "application/json"
+            resp.status = HTTP_200
+            resp.body = json.dumps({"error": "failed to process content"})
