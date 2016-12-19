@@ -1,9 +1,13 @@
+import logging
 import json
 
 from falcon import HTTP_200, HTTPBadRequest
 from goose import Goose
 from bs4 import BeautifulSoup
 from opengraph import OpenGraph
+
+
+logger = logging.getLogger(__name__)
 
 
 class ProcessHTML(object):
@@ -23,15 +27,12 @@ class ProcessHTML(object):
 
         return {"text": content}
 
-    def _extract_page_data(self, request_body):
-        soup = BeautifulSoup(request_body, "html.parser")
-
+    def _extract_page_data(self, soup):
         response = {}
 
         title = soup.find("title")
         if title:
             response["title"] = title.text
-            response["content-length"] = len(request_body)
 
         return response
 
@@ -44,6 +45,21 @@ class ProcessHTML(object):
             return opengraph
         else:
             return {"error": "failed to extract OpenGraph data"}
+
+    def _extract_twitter_card(self, soup):
+        card = {}
+
+        for meta in soup.find_all("meta"):
+            name = meta.get("name", "")
+            if name.startswith("twitter:"):
+                items = name.split(":")
+                if len(items) < 2:
+                    msg = "Invalid twitter card value: twitter_card(%s)"
+                    logger.warning(msg, name)
+                    continue
+                card[":".join(items[1:])] = meta.get("content")
+
+        return card
 
     def on_post(self, req, resp):
         if req.content_length in (None, 0):
@@ -60,10 +76,13 @@ class ProcessHTML(object):
 
         resp.content_type = "application/json"
 
+        soup = BeautifulSoup(body, "html.parser")
+
         try:
             content = self._extract_page_content(body)
-            page_data = self._extract_page_data(body)
+            page_data = self._extract_page_data(soup)
             opengraph_data = self._extract_opengraph_data(body)
+            twitter_card = self._extract_twitter_card(soup)
 
             resp.status = HTTP_200
 
@@ -75,7 +94,8 @@ class ProcessHTML(object):
                 {
                     "content": content_response,
                     "social": {
-                        "opengraph": opengraph_data
+                        "opengraph": opengraph_data,
+                        "twitter": twitter_card
                     }
                 }
             )
