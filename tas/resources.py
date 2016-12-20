@@ -18,10 +18,12 @@ class ProcessHTML(object):
         try:
             article = self.goose.extract(raw_html=request_body)
         except Exception:
+            logger.exception("failed to extract content")
             return {"error": "failed to extract content"}
 
         if article is None:
             content = None
+            logger.warning("no content found in page")
         else:
             content = article.cleaned_text
 
@@ -45,6 +47,7 @@ class ProcessHTML(object):
             del opengraph["_url"]
             return opengraph
         else:
+            logger.warning("failed to extract OpenGraph data")
             return {"error": "failed to extract OpenGraph data"}
 
     def _extract_twitter_card(self, soup):
@@ -66,14 +69,19 @@ class ProcessHTML(object):
         logger.info("processing html content")
 
         if req.content_length in (None, 0):
+            msg = "invalid content length: content_length(%s)"
+            logger.warning(msg, req.content_length)
             raise HTTPBadRequest('Invalid request body',
                                  'The content length of the body is not valid')
         elif req.content_length > 250000:
+            msg = "very large body: content_length(%s)"
+            logger.warning(msg, req.content_length)
             raise HTTPBadRequest('Invalid request body',
                                  'The body is very large')
 
         body = req.stream.read()
         if not body:
+            logger.warning("Empty request body")
             raise HTTPBadRequest('Empty request body',
                                  'The contents of a web page must be provided')
 
