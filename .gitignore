@@ -3,3 +3,5 @@ virtualenv/
 *.pyc
 temp/
 Text_analysis_service.egg-info/
+cover/
+.coverage

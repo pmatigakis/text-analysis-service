@@ -14,7 +14,8 @@ setup(
     ],
     test_suite="nose.collector",
     tests_require=[
-        "nose==1.3.7"
+        "nose==1.3.7",
+        "requests==2.12.4"
     ],
     entry_points = {
         'console_scripts': ['tas-cli=tas.cli:main'],

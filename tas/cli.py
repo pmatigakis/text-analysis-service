@@ -2,7 +2,7 @@ from os import getcwd, path
 from wsgiref import simple_server
 from argparse import ArgumentParser
 
-from tas.application import create_app
+from tas.application import create_app, load_settings
 
 
 def run(args):
@@ -10,7 +10,12 @@ def run(args):
 
     app = create_app(settings_file)
 
-    httpd = simple_server.make_server(args.host, args.port, app)
+    settings = load_settings(settings_file)
+
+    host = args.host or settings.get("debug-server]", "host")
+    port = args.port or settings.getint("debug-server]", "port")
+
+    httpd = simple_server.make_server(host, port, app)
     httpd.serve_forever()
 
 
