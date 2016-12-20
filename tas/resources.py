@@ -62,6 +62,8 @@ class ProcessHTML(object):
         return card
 
     def on_post(self, req, resp):
+        logger.info("processing html content")
+
         if req.content_length in (None, 0):
             raise HTTPBadRequest('Invalid request body',
                                  'The content length of the body is not valid')
