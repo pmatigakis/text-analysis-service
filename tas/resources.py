@@ -1,7 +1,7 @@
 import logging
 import json
 
-from falcon import HTTP_200, HTTPBadRequest
+from falcon import HTTP_200, HTTP_500, HTTPBadRequest
 from goose import Goose
 from bs4 import BeautifulSoup
 from opengraph import OpenGraph
@@ -42,6 +42,7 @@ class ProcessHTML(object):
         opengraph.parser(request_body)
 
         if opengraph.is_valid():
+            del opengraph["_url"]
             return opengraph
         else:
             return {"error": "failed to extract OpenGraph data"}
@@ -102,5 +103,5 @@ class ProcessHTML(object):
                 }
             )
         except Exception:
-            resp.status = HTTP_200
+            resp.status = HTTP_500
             resp.body = json.dumps({"error": "failed to process content"})
