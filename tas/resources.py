@@ -66,6 +66,7 @@ class ProcessHTML(object):
         # if twitter card data could not be extracted then return None instead
         # of an empty dictionary
         if len(card) == 0:
+            logger.warning("failed to extract twitter card")
             card = None
 
         return card
