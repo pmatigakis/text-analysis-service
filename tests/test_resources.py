@@ -160,10 +160,7 @@ class ProcessHtmlTests(ResourceTestCase):
         self.assertIn("social", response.json)
         self.assertIn("opengraph", response.json["social"])
 
-        self.assertDictEqual(
-            response.json["social"]["opengraph"],
-            {'error': 'failed to extract OpenGraph data'}
-        )
+        self.assertIsNone(response.json["social"]["opengraph"])
 
     @patch.object(ProcessHTML, "_extract_page_content")
     def test_failed_to_extract_opengraph_data_when_exception_is_raised(

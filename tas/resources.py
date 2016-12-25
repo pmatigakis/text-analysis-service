@@ -48,7 +48,7 @@ class ProcessHTML(object):
             return opengraph
         else:
             logger.warning("failed to extract OpenGraph data")
-            return {"error": "failed to extract OpenGraph data"}
+            return None
 
     def _extract_twitter_card(self, soup):
         card = {}
@@ -62,6 +62,11 @@ class ProcessHTML(object):
                     logger.warning(msg, name)
                     continue
                 card[":".join(items[1:])] = meta.get("content")
+
+        # if twitter card data could not be extracted then return None instead
+        # of an empty dictionary
+        if len(card) == 0:
+            card = None
 
         return card
 
