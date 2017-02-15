@@ -1,48 +1,31 @@
-from ConfigParser import ConfigParser
 import logging
 from logging.handlers import RotatingFileHandler
 
 from falcon import API
 
 from tas.resources import ProcessHTML
+from tas.configuration.loaders import Configuration
 
 
-def load_settings(settings_file):
-    config_parser = ConfigParser()
-
-    with open(settings_file) as f:
-        config_parser.readfp(f)
-
-    return config_parser
-
-
-def load_resources(settings, app):
+def load_resources(configuration, app):
     process_html_resource = ProcessHTML()
 
     app.add_route("/api/v1/process_html", process_html_resource)
 
 
-def setup_logging(settings):
+def setup_logging(configuration):
     logger = logging.getLogger("tas")
 
     log_format = "%(asctime)s %(levelname)s [%(process)d:%(thread)d] " \
                  "%(name)s [%(pathname)s:%(funcName)s:%(lineno)d] %(message)s"
     formatter = logging.Formatter(log_format)
 
-    log_levels = {
-        "info": logging.INFO,
-        "warn": logging.WARN,
-        "error": logging.ERROR,
-        "debug": logging.DEBUG
-    }
+    if configuration["ENABLE_LOGGING"]:
+        log_level = configuration["LOG_LEVEL"]
 
-    if settings.getboolean("logging", "enabled"):
-        log_level = settings.get("logging", "level")
-        log_level = log_levels.get(log_level, logging.INFO)
-
-        filename = settings.get("logging", "filename")
-        max_bytes = settings.get("logging", "max_bytes")
-        backup_count = settings.get("logging", "backup_count")
+        filename = configuration["LOG_FILE"]
+        max_bytes = configuration["LOG_MAX_BYTES"]
+        backup_count = configuration["LOG_BACKUP_COUNT"]
 
         file_handler = RotatingFileHandler(
             filename, maxBytes=max_bytes, backupCount=backup_count)
@@ -50,7 +33,7 @@ def setup_logging(settings):
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
 
-    if settings.getboolean("application", "debug"):
+    if configuration["DEBUG"]:
         log_level = logging.DEBUG
         stream_handler = logging.StreamHandler()
         stream_handler.setLevel(logging.DEBUG)
@@ -61,11 +44,11 @@ def setup_logging(settings):
 
 
 def create_app(settings_file):
-    settings = load_settings(settings_file)
+    configuration = Configuration.load_from_py(settings_file)
 
     app = API()
 
-    setup_logging(settings)
-    load_resources(settings, app)
+    setup_logging(configuration)
+    load_resources(configuration, app)
 
     return app

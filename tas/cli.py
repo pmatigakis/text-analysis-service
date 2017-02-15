@@ -2,18 +2,19 @@ from os import getcwd, path
 from wsgiref import simple_server
 from argparse import ArgumentParser
 
-from tas.application import create_app, load_settings
+from tas.application import create_app
+from tas.configuration.loaders import Configuration
 
 
 def run(args):
-    settings_file = path.join(getcwd(), "settings.ini")
+    settings_file = path.join(getcwd(), "settings.py")
 
     app = create_app(settings_file)
 
-    settings = load_settings(settings_file)
+    configuration = Configuration.load_from_py(settings_file)
 
-    host = args.host or settings.get("debug-server]", "host")
-    port = args.port or settings.getint("debug-server]", "port")
+    host = args.host or configuration.get("HOST")
+    port = args.port or configuration.get("PORT")
 
     httpd = simple_server.make_server(host, port, app)
     httpd.serve_forever()

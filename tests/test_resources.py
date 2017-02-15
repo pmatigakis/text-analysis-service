@@ -51,7 +51,7 @@ class ResourceTestCase(TestCase):
 
         settings_file = path.join(
             path.dirname(
-                path.abspath(__file__)), "configuration_files", "settings.ini")
+                path.abspath(__file__)), "configuration_files", "settings.py")
 
         self.app = create_app(settings_file)
 
