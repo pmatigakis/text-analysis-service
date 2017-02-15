@@ -119,3 +119,5 @@ class ProcessHTML(object):
         except Exception:
             resp.status = HTTP_500
             resp.body = json.dumps({"error": "failed to process content"})
+
+            logger.exception("failed to process content")
