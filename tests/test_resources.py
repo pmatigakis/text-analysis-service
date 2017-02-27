@@ -68,6 +68,12 @@ class ProcessHtmlTests(ResourceTestCase):
         self.assertIn("title", response.json["content"])
         self.assertEqual("test page", response.json["content"]["title"])
 
+        self.assertIn("keywords", response.json["content"])
+        self.assertIsInstance(response.json["content"]["keywords"], list)
+
+        # TODO: for the moment just check if there are any keywords
+        self.assertTrue(len(response.json["content"]["keywords"]) > 0)
+
         self.assertIn("social", response.json)
         self.assertIn("opengraph", response.json["social"])
         self.assertIn("twitter", response.json["social"])
@@ -108,6 +114,8 @@ class ProcessHtmlTests(ResourceTestCase):
             response.json["content"],
             {'error': 'failed to extract content', 'title': 'test page'}
         )
+
+        self.assertNotIn("keywords", response.json["content"])
 
         self.assertIn("social", response.json)
         self.assertIn("opengraph", response.json["social"])
@@ -199,6 +207,19 @@ class ProcessHtmlTests(ResourceTestCase):
                 'description': 'The body is very large',
                 'title': 'Invalid request body'
             }
+        )
+
+    @patch.object(ProcessHTML, "_extract_keywords")
+    def test_failed_to_extract_keywords_when_exception_is_raised(
+            self, extract_keywords_mock):
+        extract_keywords_mock.side_effect = Exception
+
+        response = self.simulate_post(
+            "/api/v1/process_html", body=page_contents)
+
+        self.assertDictEqual(
+            response.json,
+            {'error': 'failed to process content'}
         )
 
 

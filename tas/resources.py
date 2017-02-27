@@ -5,14 +5,19 @@ from falcon import HTTP_200, HTTP_500, HTTPBadRequest
 from goose import Goose
 from bs4 import BeautifulSoup
 from opengraph import OpenGraph
+from rake.rake import Rake
+from rake.stoplists import get_stoplist_file_path
 
 
 logger = logging.getLogger(__name__)
 
 
 class ProcessHTML(object):
-    def __init__(self):
+    def __init__(self, keyword_stop_list=None):
         self.goose = Goose()
+
+        keyword_stop_list = keyword_stop_list or "SmartStoplist.txt"
+        self.rake = Rake(get_stoplist_file_path(keyword_stop_list))
 
     def _extract_page_content(self, request_body):
         try:
@@ -71,6 +76,11 @@ class ProcessHTML(object):
 
         return card
 
+    def _extract_keywords(self, text):
+        keywords = self.rake.run(text)
+
+        return keywords
+
     def on_post(self, req, resp):
         logger.info("processing html content")
 
@@ -100,6 +110,12 @@ class ProcessHTML(object):
             page_data = self._extract_page_data(soup)
             opengraph_data = self._extract_opengraph_data(body)
             twitter_card = self._extract_twitter_card(soup)
+
+            if ("text" in content and
+                    isinstance(content["text"], (str, unicode)) and
+                    len(content["text"]) != 0):
+                keywords = self._extract_keywords(content["text"])
+                content["keywords"] = keywords
 
             resp.status = HTTP_200
 
