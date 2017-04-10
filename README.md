@@ -1,8 +1,14 @@
 Test analysis service
 
 ### Installation
-Install RAKE
+Install dependencies from the `requirements.txt` file
 
 ```
-pip install git+https://github.com/pmatigakis/RAKE.git
+pip install -r requirements
+```
+
+Install `tas`
+
+```
+python setup.py install
 ```
