@@ -1,12 +1,15 @@
 import logging
 import json
 
-from falcon import HTTP_200, HTTP_500, HTTPBadRequest
+from falcon import HTTP_200, HTTPBadRequest, HTTPInternalServerError
 from goose import Goose
 from bs4 import BeautifulSoup
 from opengraph import OpenGraph
 from rake.rake import Rake
 from rake.stoplists import get_stoplist_file_path
+
+
+from tas import error_codes
 
 
 logger = logging.getLogger(__name__)
@@ -87,19 +90,31 @@ class ProcessHTML(object):
         if req.content_length in (None, 0):
             msg = "invalid content length: content_length(%s)"
             logger.warning(msg, req.content_length)
-            raise HTTPBadRequest('Invalid request body',
-                                 'The content length of the body is not valid')
+
+            raise HTTPBadRequest(
+                title='Invalid request body',
+                description='The content length of the body is not valid',
+                code=error_codes.UNDEFINED_CONTENT_LENGTH
+            )
         elif req.content_length > 250000:
             msg = "very large body: content_length(%s)"
             logger.warning(msg, req.content_length)
-            raise HTTPBadRequest('Invalid request body',
-                                 'The body is very large')
+
+            raise HTTPBadRequest(
+                title='Invalid request body',
+                description='The body is very large',
+                code=error_codes.VERY_LARGE_CONTENT_SIZE
+            )
 
         body = req.stream.read()
         if not body:
             logger.warning("Empty request body")
-            raise HTTPBadRequest('Empty request body',
-                                 'The contents of a web page must be provided')
+
+            raise HTTPBadRequest(
+                title='Empty request body',
+                description='The contents of a web page must be provided',
+                code=error_codes.EMPTY_REQUEST_BODY
+            )
 
         resp.content_type = "application/json"
 
@@ -133,7 +148,10 @@ class ProcessHTML(object):
                 }
             )
         except Exception:
-            resp.status = HTTP_500
-            resp.body = json.dumps({"error": "failed to process content"})
-
             logger.exception("failed to process content")
+
+            raise HTTPInternalServerError(
+                title="Processing error",
+                description="Failed to process content",
+                code=error_codes.TAS_ERROR
+            )
