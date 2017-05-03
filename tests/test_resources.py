@@ -180,7 +180,12 @@ class ProcessHtmlTests(ResourceTestCase):
 
         self.assertDictEqual(
             response.json,
-            {'error': 'failed to process content'}
+            {
+                'code': 1003,
+                'description': 'Failed to process content',
+                'title': 'Processing error'
+
+            }
         )
 
     def test_fail_to_process_page_when_content_length_is_0(self):
@@ -191,7 +196,8 @@ class ProcessHtmlTests(ResourceTestCase):
             response.json,
             {
                 'description': 'The content length of the body is not valid',
-                'title': 'Invalid request body'
+                'title': 'Invalid request body',
+                'code': 1000
             }
         )
 
@@ -205,7 +211,8 @@ class ProcessHtmlTests(ResourceTestCase):
             response.json,
             {
                 'description': 'The body is very large',
-                'title': 'Invalid request body'
+                'title': 'Invalid request body',
+                'code': 1001
             }
         )
 
@@ -219,7 +226,12 @@ class ProcessHtmlTests(ResourceTestCase):
 
         self.assertDictEqual(
             response.json,
-            {'error': 'failed to process content'}
+            {
+                'description': 'Failed to process content',
+                'title': 'Processing error',
+                'code': 1003
+
+            }
         )
 
 
