@@ -1,5 +1,4 @@
 import logging
-from logging.handlers import RotatingFileHandler
 
 from falcon import API
 
@@ -17,23 +16,13 @@ def load_resources(configuration, app):
 
 def setup_logging(configuration):
     logger = logging.getLogger("tas")
+    logger.handlers = []
 
     log_format = "%(asctime)s %(levelname)s [%(process)d:%(thread)d] " \
                  "%(name)s [%(pathname)s:%(funcName)s:%(lineno)d] %(message)s"
     formatter = logging.Formatter(log_format)
 
-    if configuration["ENABLE_LOGGING"]:
-        log_level = configuration["LOG_LEVEL"]
-
-        filename = configuration["LOG_FILE"]
-        max_bytes = configuration["LOG_MAX_BYTES"]
-        backup_count = configuration["LOG_BACKUP_COUNT"]
-
-        file_handler = RotatingFileHandler(
-            filename, maxBytes=max_bytes, backupCount=backup_count)
-        file_handler.setLevel(log_level)
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
+    log_level = configuration["LOG_LEVEL"]
 
     if configuration["DEBUG"]:
         log_level = logging.DEBUG
@@ -44,13 +33,19 @@ def setup_logging(configuration):
 
     logger.setLevel(log_level)
 
+    for log_handler in configuration["LOG_HANDLERS"]:
+        log_handler.setFormatter(formatter)
+        logger.addHandler(log_handler)
+
 
 def create_app(settings_file):
     configuration = Configuration.load_from_py(settings_file)
 
     app = API()
 
-    setup_logging(configuration)
+    if configuration["ENABLE_LOGGING"]:
+        setup_logging(configuration)
+
     load_resources(configuration, app)
 
     return app
