@@ -22,6 +22,8 @@ class ProcessHTML(object):
         keyword_stop_list = keyword_stop_list or "SmartStoplist.txt"
         self.rake = Rake(get_stoplist_file_path(keyword_stop_list))
 
+        self.max_content_size = 250000
+
     def _extract_page_content(self, request_body):
         try:
             article = self.goose.extract(raw_html=request_body)
@@ -96,7 +98,7 @@ class ProcessHTML(object):
                 description='The content length of the body is not valid',
                 code=error_codes.UNDEFINED_CONTENT_LENGTH
             )
-        elif req.content_length > 250000:
+        elif req.content_length > self.max_content_size:
             msg = "very large body: content_length(%s)"
             logger.warning(msg, req.content_length)
 
