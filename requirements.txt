@@ -1,2 +1,2 @@
--e git+git@gitlab.com:pmatigakis/opengraph.git#egg=opengraph
--e git+git@gitlab.com:pmatigakis/RAKE.git#egg=RAKE
+-e git+https://github.com/topicaxis/opengraph.git#egg=opengraph
+-e git+https://github.com/pmatigakis/RAKE.git#egg=RAKE

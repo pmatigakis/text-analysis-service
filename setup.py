@@ -10,7 +10,6 @@ setup(
         "goose-extractor==1.0.25",
         "falcon==1.1.0",
         "beautifulsoup4==4.5.1",
-        "opengraph==0.5",
         "uWSGI==2.0.14"
     ],
     test_suite="nose.collector",
