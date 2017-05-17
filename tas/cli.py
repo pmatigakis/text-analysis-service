@@ -1,23 +1,35 @@
-from os import getcwd, path
-from wsgiref import simple_server
+from os import getcwd, path, environ, execvp
 from argparse import ArgumentParser
 
-from tas.application import create_app
 from tas.configuration.loaders import Configuration
 
 
 def run(args):
     settings_file = path.join(getcwd(), "settings.py")
 
-    app = create_app(settings_file)
-
     configuration = Configuration.load_from_py(settings_file)
 
-    host = args.host or configuration.get("HOST")
-    port = args.port or configuration.get("PORT")
+    uwsgi_settings = {
+        "UWSGI_MODULE": "tas.wsgi",
+        "UWSGI_CALLABLE": "wsgi_app()",
+        "UWSGI_MASTER": "1",
+        "UWSGI_PROCESSES": "1",
+        "UWSGI_DIE_ON_TERM": "1",
+        "UWSGI_LAZY_APPS": "1",
+        "UWSGI_VHOST": "1"
+    }
 
-    httpd = simple_server.make_server(host, port, app)
-    httpd.serve_forever()
+    uwsgi_settings.update(configuration.get("UWSGI", {}))
+
+    host = configuration.get("HOST", "127.0.0.1")
+    port = configuration.get("PORT", 5000)
+
+    uwsgi_settings["UWSGI_HTTP"] = "{host}:{port}".format(host=host, port=port)
+
+    for configuration_variable, value in uwsgi_settings.items():
+        environ[configuration_variable] = str(value)
+
+    execvp("uwsgi", ("uwsgi",))
 
 
 def get_arguments():
@@ -25,15 +37,7 @@ def get_arguments():
 
     subparsers = parser.add_subparsers()
 
-    run_parser = subparsers.add_parser(
-        "run", help="Start the development server")
-
-    run_parser.add_argument(
-        "--host", default="127.0.0.1", help="The server's host address")
-
-    run_parser.add_argument(
-        "--port", default=8000, type=int, help="The server's port")
-
+    run_parser = subparsers.add_parser("server", help="Start the tas server")
     run_parser.set_defaults(func=run)
 
     return parser.parse_args()
