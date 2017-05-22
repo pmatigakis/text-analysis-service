@@ -8,8 +8,7 @@ from opengraph import OpenGraph
 from rake.rake import Rake
 from rake.stoplists import get_stoplist_file_path
 
-
-from tas import error_codes
+from tas import error_codes, __VERSION__
 
 
 logger = logging.getLogger(__name__)
@@ -166,3 +165,23 @@ class Health(object):
         resp.status = HTTP_200
         resp.content_type = "application/json"
         resp.body = json.dumps({"result": "ok"})
+
+
+class Information(object):
+    def __init__(self, configuration):
+        self.configuration = configuration
+
+    def on_get(self, req, resp):
+        logger.info("service information requested")
+
+        resp.status = HTTP_200
+        resp.content_type = "application/json"
+
+        response = {
+            "service": "tas",
+            "version": __VERSION__,
+            "host": self.configuration.get("HOST"),
+            "port": self.configuration.get("PORT")
+        }
+
+        resp.body = json.dumps(response)

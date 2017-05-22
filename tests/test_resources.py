@@ -248,5 +248,23 @@ class HealthCheckTests(ResourceTestCase):
         )
 
 
+class InformationEndpointTests(ResourceTestCase):
+    def test_information(self):
+        response = self.simulate_get(
+            "/service/information", body=page_contents)
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertDictEqual(
+            response.json,
+            {
+                "host": "127.0.0.1",
+                "port": 8000,
+                "service": "tas",
+                "version": "0.2.0"
+            }
+        )
+
+
 if __name__ == "__main__":
     main()
