@@ -157,3 +157,12 @@ class ProcessHTML(object):
                 description="Failed to process content",
                 code=error_codes.TAS_ERROR
             )
+
+
+class Health(object):
+    def on_get(self, req, resp):
+        logger.info("health check requested")
+
+        resp.status = HTTP_200
+        resp.content_type = "application/json"
+        resp.body = json.dumps({"result": "ok"})

@@ -2,7 +2,7 @@ import logging
 
 from falcon import API
 
-from tas.resources import ProcessHTML
+from tas.resources import ProcessHTML, Health
 from tas.configuration.loaders import Configuration
 
 
@@ -12,6 +12,7 @@ def load_resources(configuration, app):
     )
 
     app.add_route("/api/v1/process_html", process_html_resource)
+    app.add_route("/service/health", Health())
 
 
 def setup_logging(configuration):

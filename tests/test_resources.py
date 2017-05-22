@@ -230,7 +230,20 @@ class ProcessHtmlTests(ResourceTestCase):
                 'description': 'Failed to process content',
                 'title': 'Processing error',
                 'code': 1003
+            }
+        )
 
+
+class HealthCheckTests(ResourceTestCase):
+    def test_health(self):
+        response = self.simulate_get("/service/health", body=page_contents)
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertDictEqual(
+            response.json,
+            {
+                "result": "ok"
             }
         )
 
