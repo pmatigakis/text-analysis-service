@@ -2,13 +2,9 @@ import logging
 import json
 
 from falcon import HTTP_200, HTTPBadRequest, HTTPInternalServerError
-from goose import Goose
-from bs4 import BeautifulSoup
-from opengraph import OpenGraph
-from rake.rake import Rake
-from rake.stoplists import get_stoplist_file_path
 
 from tas import error_codes, __VERSION__
+from tas.processors import HTMLContentProcessor
 
 
 logger = logging.getLogger(__name__)
@@ -16,74 +12,27 @@ logger = logging.getLogger(__name__)
 
 class ProcessHTML(object):
     def __init__(self, keyword_stop_list=None):
-        self.goose = Goose()
-
-        keyword_stop_list = keyword_stop_list or "SmartStoplist.txt"
-        self.rake = Rake(get_stoplist_file_path(keyword_stop_list))
-
+        self.keyword_stop_list = keyword_stop_list
         self.max_content_size = 250000
 
-    def _extract_page_content(self, request_body):
-        try:
-            article = self.goose.extract(raw_html=request_body)
-        except Exception:
-            logger.exception("failed to extract content")
-            return {"error": "failed to extract content"}
+    def _is_valid_request_body(self, request_body):
+        return "content_type" in request_body and "content" in request_body
 
-        if article is None:
-            content = None
-            logger.warning("no content found in page")
-        else:
-            content = article.cleaned_text
+    def _is_supported_content_type(self, request_body_content_type):
+        # only text/html is supported for the moment
+        return request_body_content_type.startswith("text/html")
 
-        return {"text": content}
+    def _select_content_processor(self, request_content_type):
+        if request_content_type.startswith("text/html"):
+            return HTMLContentProcessor(self.keyword_stop_list)
 
-    def _extract_page_data(self, soup):
-        response = {}
-
-        title = soup.find("title")
-        if title:
-            response["title"] = title.text
-
-        return response
-
-    def _extract_opengraph_data(self, request_body):
-        opengraph = OpenGraph()
-
-        opengraph.parser(request_body)
-
-        if opengraph.is_valid():
-            del opengraph["_url"]
-            return opengraph
-        else:
-            logger.warning("failed to extract OpenGraph data")
-            return None
-
-    def _extract_twitter_card(self, soup):
-        card = {}
-
-        for meta in soup.find_all("meta"):
-            name = meta.get("name", "")
-            if name.startswith("twitter:"):
-                items = name.split(":")
-                if len(items) < 2:
-                    msg = "Invalid twitter card value: twitter_card(%s)"
-                    logger.warning(msg, name)
-                    continue
-                card[":".join(items[1:])] = meta.get("content")
-
-        # if twitter card data could not be extracted then return None instead
-        # of an empty dictionary
-        if len(card) == 0:
-            logger.warning("failed to extract twitter card")
-            card = None
-
-        return card
-
-    def _extract_keywords(self, text):
-        keywords = self.rake.run(text)
-
-        return keywords
+        # this content type is not supported
+        raise HTTPBadRequest(
+            title='Invalid request body',
+            description='The content type "{}" is not supported'.format(
+                request_content_type),
+            code=error_codes.INVALID_REQUEST_BODY
+        )
 
     def on_post(self, req, resp):
         logger.info("processing html content")
@@ -117,37 +66,40 @@ class ProcessHTML(object):
                 code=error_codes.EMPTY_REQUEST_BODY
             )
 
-        resp.content_type = "application/json"
+        try:
+            body = json.loads(body)
+        except ValueError:
+            logger.exception("failed to decode request body")
 
-        soup = BeautifulSoup(body, "html.parser")
+            raise HTTPBadRequest(
+                title='Invalid request body',
+                description='The contents of the request body could not be '
+                            'decoded',
+                code=error_codes.INVALID_REQUEST_BODY
+            )
+
+        if not self._is_valid_request_body(body):
+            raise HTTPBadRequest(
+                title='Invalid request body',
+                description='The contents of the request are not in the '
+                            'appropriate format',
+                code=error_codes.INVALID_REQUEST_BODY
+            )
+
+        if not self._is_supported_content_type(body["content_type"]):
+            raise HTTPBadRequest(
+                title='Invalid request body',
+                description='The content type "{}" is not supported'.format(
+                    body["content_type"]),
+                code=error_codes.INVALID_REQUEST_BODY
+            )
+
+        content_processor = self._select_content_processor(
+            body["content_type"])
 
         try:
-            content = self._extract_page_content(body)
-            page_data = self._extract_page_data(soup)
-            opengraph_data = self._extract_opengraph_data(body)
-            twitter_card = self._extract_twitter_card(soup)
-
-            if ("text" in content and
-                    isinstance(content["text"], (str, unicode)) and
-                    len(content["text"]) != 0):
-                keywords = self._extract_keywords(content["text"])
-                content["keywords"] = keywords
-
-            resp.status = HTTP_200
-
-            content_response = {}
-            content_response.update(content)
-            content_response.update(page_data)
-
-            resp.body = json.dumps(
-                {
-                    "content": content_response,
-                    "social": {
-                        "opengraph": opengraph_data,
-                        "twitter": twitter_card
-                    }
-                }
-            )
+            processing_result = content_processor.process_content(
+                body["content"])
         except Exception:
             logger.exception("failed to process content")
 
@@ -156,6 +108,10 @@ class ProcessHTML(object):
                 description="Failed to process content",
                 code=error_codes.TAS_ERROR
             )
+
+        resp.status = HTTP_200
+        resp.content_type = "application/json"
+        resp.body = json.dumps(processing_result)
 
 
 class Health(object):

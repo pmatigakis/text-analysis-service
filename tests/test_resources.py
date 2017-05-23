@@ -1,5 +1,6 @@
 from os import path
 from unittest import main
+import json
 
 from falcon.testing import TestCase
 from mock import patch
@@ -7,7 +8,7 @@ from goose import Goose
 from opengraph import OpenGraph
 
 from tas.application import create_app
-from tas.resources import ProcessHTML
+from tas.resources import HTMLContentProcessor
 
 
 page_contents = """
@@ -44,6 +45,11 @@ page_contents = """
 </html>
 """
 
+request_body = {
+    "content_type": "text/html",
+    "content": page_contents
+}
+
 
 class ResourceTestCase(TestCase):
     def setUp(self):
@@ -59,7 +65,12 @@ class ResourceTestCase(TestCase):
 class ProcessHtmlTests(ResourceTestCase):
     def test_process_html(self):
         response = self.simulate_post(
-            "/api/v1/process_html", body=page_contents)
+            "/api/v1/process_html",
+            body=json.dumps(request_body),
+            headers={
+                "Content-Type": "application/json"
+            }
+        )
 
         self.assertIn("content", response.json)
         self.assertIn("text", response.json["content"])
@@ -107,7 +118,12 @@ class ProcessHtmlTests(ResourceTestCase):
         extract_mock.side_effect = Exception()
 
         response = self.simulate_post(
-            "/api/v1/process_html", body=page_contents)
+            "/api/v1/process_html",
+            body=json.dumps(request_body),
+            headers={
+                "Content-Type": "application/json"
+            }
+        )
 
         self.assertIn("content", response.json)
         self.assertDictEqual(
@@ -152,10 +168,15 @@ class ProcessHtmlTests(ResourceTestCase):
         response = self.simulate_post(
             "/api/v1/process_html", body=page_contents)
 
-        self.assertIn("content", response.json)
+        self.assertEqual(response.status_code, 400)
         self.assertDictEqual(
-            response.json["content"],
-            {'text': None, 'title': 'test page'}
+            response.json,
+            {
+                "code": 1004,
+                "description": "The contents of the request body could not "
+                               "be decoded",
+                "title": "Invalid request body"
+            }
         )
 
     @patch.object(OpenGraph, "is_valid")
@@ -163,20 +184,30 @@ class ProcessHtmlTests(ResourceTestCase):
         is_valid_mock.return_value = False
 
         response = self.simulate_post(
-            "/api/v1/process_html", body=page_contents)
+            "/api/v1/process_html",
+            body=json.dumps(request_body),
+            headers={
+                "Content-Type": "application/json"
+            }
+        )
 
         self.assertIn("social", response.json)
         self.assertIn("opengraph", response.json["social"])
 
         self.assertIsNone(response.json["social"]["opengraph"])
 
-    @patch.object(ProcessHTML, "_extract_page_content")
+    @patch.object(HTMLContentProcessor, "_extract_page_content")
     def test_failed_to_extract_opengraph_data_when_exception_is_raised(
             self, extract_page_content_mock):
         extract_page_content_mock.side_effect = Exception
 
         response = self.simulate_post(
-            "/api/v1/process_html", body=page_contents)
+            "/api/v1/process_html",
+            body=json.dumps(request_body),
+            headers={
+                "Content-Type": "application/json"
+            }
+        )
 
         self.assertDictEqual(
             response.json,
@@ -216,13 +247,18 @@ class ProcessHtmlTests(ResourceTestCase):
             }
         )
 
-    @patch.object(ProcessHTML, "_extract_keywords")
+    @patch.object(HTMLContentProcessor, "_extract_keywords")
     def test_failed_to_extract_keywords_when_exception_is_raised(
             self, extract_keywords_mock):
         extract_keywords_mock.side_effect = Exception
 
         response = self.simulate_post(
-            "/api/v1/process_html", body=page_contents)
+            "/api/v1/process_html",
+            body=json.dumps(request_body),
+            headers={
+                "Content-Type": "application/json"
+            }
+        )
 
         self.assertDictEqual(
             response.json,
@@ -230,6 +266,54 @@ class ProcessHtmlTests(ResourceTestCase):
                 'description': 'Failed to process content',
                 'title': 'Processing error',
                 'code': 1003
+            }
+        )
+
+    def test_request_content_type_is_not_supported(self):
+        invalid_request_body = request_body.copy()
+        invalid_request_body["content_type"] = "text/plain"
+
+        response = self.simulate_post(
+            "/api/v1/process_html",
+            body=json.dumps(invalid_request_body),
+            headers={
+                "Content-Type": "application/json"
+            }
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+        self.assertDictEqual(
+            response.json,
+            {
+                "code": 1004,
+                "description": 'The content type "text/plain" is not '
+                               'supported',
+                "title": "Invalid request body"
+            }
+        )
+
+    def test_invalid_request_body_format(self):
+        invalid_request_body = request_body.copy()
+        del invalid_request_body["content_type"]
+
+        response = self.simulate_post(
+            "/api/v1/process_html",
+            body=json.dumps(invalid_request_body),
+            headers={
+                "Content-Type": "application/json"
+            }
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+        self.assertDictEqual(
+            response.json,
+            {
+                "code": 1004,
+                "description": "The contents of the request are not in the "
+                               "appropriate format",
+                "title": "Invalid request body"
             }
         )
 
