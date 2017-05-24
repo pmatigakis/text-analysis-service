@@ -3,6 +3,19 @@ from types import ModuleType
 
 
 class Configuration(dict):
+    def __init__(self, *args, **kwargs):
+        super(Configuration, self).__init__(*args, **kwargs)
+
+        # TODO: the default configuration should be moved to a separate module
+        # and loaded from there instead
+        self["CONSUL_HOST"] = None
+        self["CONSUL_PORT"] = 8500
+        self["CONSUL_SCHEME"] = "http"
+        self["CONSUL_VERIFY_SSL"] = True
+        self["CONSUL_HEALTH_INTERVAL"] = "10s"
+        self["CONSUL_HEALTH_TIMEOUT"] = "5s"
+        self["SERVICE_NAME"] = "tas"
+
     @classmethod
     def load_from_py(cls, filename):
         filename = filename if path.isabs(filename) else path.abspath(filename)

@@ -1,14 +1,58 @@
 from os import getcwd, path, environ, execvp
 from argparse import ArgumentParser
+import hashlib
+
+from consul import Consul, Check
 
 from tas.configuration.loaders import Configuration
 
 
-def run(args):
-    settings_file = path.join(getcwd(), "settings.py")
+def _generate_service_id(service_name, host, port):
+    """Create the service id for consul
+    :param str service_name: the service name
+    :param str host: the service address
+    :param int port: the port on which the service listens to
+    :rtype: str
+    :return: the service id
+    """
+    service_info = "{}-{}-{}".format(service_name, host, port).encode("utf-8")
 
-    configuration = Configuration.load_from_py(settings_file)
+    return "{}".format(hashlib.md5(service_info).hexdigest())
 
+
+def _register_service(configuration):
+    client = Consul(
+        host=configuration["CONSUL_HOST"],
+        port=configuration["CONSUL_PORT"],
+        scheme=configuration["CONSUL_SCHEME"],
+        verify=configuration["CONSUL_VERIFY_SSL"]
+    )
+
+    health_address = "http://{host}:{port}/service/health"
+
+    health_http = Check.http(
+        url=health_address.format(
+            host=configuration["HOST"],
+            port=configuration["PORT"]
+        ),
+        interval=configuration["CONSUL_HEALTH_INTERVAL"],
+        timeout=configuration["CONSUL_HEALTH_TIMEOUT"]
+    )
+
+    client.agent.service.register(
+        name=configuration["SERVICE_NAME"],
+        service_id=_generate_service_id(
+            configuration["SERVICE_NAME"],
+            configuration["HOST"],
+            configuration["PORT"]
+        ),
+        address=configuration["HOST"],
+        port=configuration["PORT"],
+        check=health_http
+    )
+
+
+def _init_uwsgi_environment_variables(configuration):
     uwsgi_settings = {
         "UWSGI_MODULE": "tas.wsgi",
         "UWSGI_CALLABLE": "wsgi_app()",
@@ -28,6 +72,17 @@ def run(args):
 
     for configuration_variable, value in uwsgi_settings.items():
         environ[configuration_variable] = str(value)
+
+
+def run(args):
+    settings_file = path.join(getcwd(), "settings.py")
+
+    configuration = Configuration.load_from_py(settings_file)
+
+    if configuration.get("CONSUL_HOST") is not None:
+        _register_service(configuration)
+
+    _init_uwsgi_environment_variables(configuration)
 
     execvp("uwsgi", ("uwsgi",))
 
