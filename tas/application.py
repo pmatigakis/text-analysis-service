@@ -11,7 +11,7 @@ def load_resources(configuration, app):
         keyword_stop_list=configuration["KEYWORD_STOP_LIST"]
     )
 
-    app.add_route("/api/v1/process_html", process_html_resource)
+    app.add_route("/api/v1/process", process_html_resource)
     app.add_route("/service/health", Health())
     app.add_route("/service/information", Information(configuration))
 

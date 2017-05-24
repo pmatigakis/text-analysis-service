@@ -65,7 +65,7 @@ class ResourceTestCase(TestCase):
 class ProcessHtmlTests(ResourceTestCase):
     def test_process_html(self):
         response = self.simulate_post(
-            "/api/v1/process_html",
+            "/api/v1/process",
             body=json.dumps(request_body),
             headers={
                 "Content-Type": "application/json"
@@ -118,7 +118,7 @@ class ProcessHtmlTests(ResourceTestCase):
         extract_mock.side_effect = Exception()
 
         response = self.simulate_post(
-            "/api/v1/process_html",
+            "/api/v1/process",
             body=json.dumps(request_body),
             headers={
                 "Content-Type": "application/json"
@@ -166,7 +166,7 @@ class ProcessHtmlTests(ResourceTestCase):
         extract_mock.return_value = None
 
         response = self.simulate_post(
-            "/api/v1/process_html", body=page_contents)
+            "/api/v1/process", body=page_contents)
 
         self.assertEqual(response.status_code, 400)
         self.assertDictEqual(
@@ -184,7 +184,7 @@ class ProcessHtmlTests(ResourceTestCase):
         is_valid_mock.return_value = False
 
         response = self.simulate_post(
-            "/api/v1/process_html",
+            "/api/v1/process",
             body=json.dumps(request_body),
             headers={
                 "Content-Type": "application/json"
@@ -202,7 +202,7 @@ class ProcessHtmlTests(ResourceTestCase):
         extract_page_content_mock.side_effect = Exception
 
         response = self.simulate_post(
-            "/api/v1/process_html",
+            "/api/v1/process",
             body=json.dumps(request_body),
             headers={
                 "Content-Type": "application/json"
@@ -225,7 +225,7 @@ class ProcessHtmlTests(ResourceTestCase):
         extract_keywords_mock.side_effect = Exception
 
         response = self.simulate_post(
-            "/api/v1/process_html",
+            "/api/v1/process",
             body=json.dumps(request_body),
             headers={
                 "Content-Type": "application/json"
@@ -246,7 +246,7 @@ class ProcessHtmlTests(ResourceTestCase):
         invalid_request_body["content_type"] = "text/plain"
 
         response = self.simulate_post(
-            "/api/v1/process_html",
+            "/api/v1/process",
             body=json.dumps(invalid_request_body),
             headers={
                 "Content-Type": "application/json"
@@ -270,7 +270,7 @@ class ProcessHtmlTests(ResourceTestCase):
         del invalid_request_body["content_type"]
 
         response = self.simulate_post(
-            "/api/v1/process_html",
+            "/api/v1/process",
             body=json.dumps(invalid_request_body),
             headers={
                 "Content-Type": "application/json"
