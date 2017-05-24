@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 class ProcessHTML(object):
     def __init__(self, keyword_stop_list=None):
         self.keyword_stop_list = keyword_stop_list
-        self.max_content_size = 250000
 
     def _is_valid_request_body(self, request_body):
         return "content_type" in request_body and "content" in request_body
@@ -36,25 +35,6 @@ class ProcessHTML(object):
 
     def on_post(self, req, resp):
         logger.info("processing html content")
-
-        if req.content_length in (None, 0):
-            msg = "invalid content length: content_length(%s)"
-            logger.warning(msg, req.content_length)
-
-            raise HTTPBadRequest(
-                title='Invalid request body',
-                description='The content length of the body is not valid',
-                code=error_codes.UNDEFINED_CONTENT_LENGTH
-            )
-        elif req.content_length > self.max_content_size:
-            msg = "very large body: content_length(%s)"
-            logger.warning(msg, req.content_length)
-
-            raise HTTPBadRequest(
-                title='Invalid request body',
-                description='The body is very large',
-                code=error_codes.VERY_LARGE_CONTENT_SIZE
-            )
 
         body = req.stream.read()
         if not body:

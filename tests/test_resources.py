@@ -219,34 +219,6 @@ class ProcessHtmlTests(ResourceTestCase):
             }
         )
 
-    def test_fail_to_process_page_when_content_length_is_0(self):
-        response = self.simulate_post(
-            "/api/v1/process_html", body="")
-
-        self.assertDictEqual(
-            response.json,
-            {
-                'description': 'The content length of the body is not valid',
-                'title': 'Invalid request body',
-                'code': 1000
-            }
-        )
-
-    def test_fail_to_process_page_when_content_length_is_large(self):
-        response = self.simulate_post(
-            "/api/v1/process_html",
-            body="a" * 300000,
-        )
-
-        self.assertDictEqual(
-            response.json,
-            {
-                'description': 'The body is very large',
-                'title': 'Invalid request body',
-                'code': 1001
-            }
-        )
-
     @patch.object(HTMLContentProcessor, "_extract_keywords")
     def test_failed_to_extract_keywords_when_exception_is_raised(
             self, extract_keywords_mock):
