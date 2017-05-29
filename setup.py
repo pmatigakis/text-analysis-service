@@ -10,9 +10,9 @@ setup(
         "goose-extractor==1.0.25",
         "falcon==1.1.0",
         "beautifulsoup4==4.5.1",
-        "uWSGI==2.0.14",
         "python-consul==0.7.0",
-        "raven==6.1.0"
+        "raven==6.1.0",
+        "gunicorn==19.7.1"
     ],
     test_suite="nose.collector",
     tests_require=[

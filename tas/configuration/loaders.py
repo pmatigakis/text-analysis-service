@@ -18,6 +18,10 @@ class Configuration(dict):
         self["SERVICE_NAME"] = "tas"
         self["SENTRY_DSN"] = None
         self["SENTRY_LOG_LEVEL"] = logging.ERROR
+        self["WORKER_MAX_REQUESTS"] = 100
+        self["WORKER_MAX_REQUESTS_JITTER"] = 10
+        self["HOST"] = "localhost"
+        self["PORT"] = 8020
 
     @classmethod
     def load_from_py(cls, filename):
