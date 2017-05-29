@@ -74,6 +74,27 @@ class Server(BaseApplication):
             check=health_http
         )
 
+    def _deregister_service(self):
+        """Deregister the service"""
+        logger.info("deregistering service from consul")
+
+        client = Consul(
+            host=self.configuration["CONSUL_HOST"],
+            port=self.configuration["CONSUL_PORT"],
+            scheme=self.configuration["CONSUL_SCHEME"],
+            verify=self.configuration["CONSUL_VERIFY_SSL"]
+        )
+
+        service_id = generate_service_id(
+            self.configuration["SERVICE_NAME"],
+            self.configuration["HOST"],
+            self.configuration["PORT"]
+        )
+
+        client.agent.service.deregister(
+            service_id=service_id
+        )
+
     def _on_starting(self, server):
         """Server is initializing
 
@@ -84,6 +105,16 @@ class Server(BaseApplication):
         if self.configuration["CONSUL_HOST"] is not None:
             self._register_service()
 
+    def _on_exit(self, server):
+        """Server is shutting down
+
+        :param server: the server object
+        """
+        logger.info("server stopped")
+
+        if self.configuration["CONSUL_HOST"] is not None:
+            self._deregister_service()
+
     def load_config(self):
         for key, value in self.options.items():
             if key in self.cfg.settings and value is not None:
@@ -92,6 +123,7 @@ class Server(BaseApplication):
         # we have to setup the hooks using lambdas in order to avoid the
         # function arity checks of gunicorn
         self.cfg.set("on_starting", lambda server: self._on_starting(server))
+        self.cfg.set("on_exit", lambda server: self._on_exit(server))
 
     def load(self):
         return self.application
