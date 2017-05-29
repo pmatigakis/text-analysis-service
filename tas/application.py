@@ -1,6 +1,7 @@
 import logging
 
 from falcon import API
+from raven.handlers.logging import SentryHandler
 
 from tas.resources import ProcessHTML, Health, Information
 from tas.configuration.loaders import Configuration
@@ -40,6 +41,14 @@ def setup_logging(configuration):
         logger.addHandler(log_handler)
 
 
+def _initialize_sentry(configuration):
+    handler = SentryHandler(configuration["SENTRY_DSN"])
+    handler.setLevel(configuration["SENTRY_LOG_LEVEL"])
+
+    logger = logging.getLogger("tas")
+    logger.addHandler(handler)
+
+
 def create_app(settings_file):
     configuration = Configuration.load_from_py(settings_file)
 
@@ -47,6 +56,9 @@ def create_app(settings_file):
 
     if configuration["ENABLE_LOGGING"]:
         setup_logging(configuration)
+
+    if configuration["SENTRY_DSN"]:
+        _initialize_sentry(configuration)
 
     load_resources(configuration, app)
 

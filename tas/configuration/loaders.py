@@ -1,5 +1,6 @@
 from os import path
 from types import ModuleType
+import logging
 
 
 class Configuration(dict):
@@ -15,6 +16,8 @@ class Configuration(dict):
         self["CONSUL_HEALTH_INTERVAL"] = "10s"
         self["CONSUL_HEALTH_TIMEOUT"] = "5s"
         self["SERVICE_NAME"] = "tas"
+        self["SENTRY_DSN"] = None
+        self["SENTRY_LOG_LEVEL"] = logging.ERROR
 
     @classmethod
     def load_from_py(cls, filename):

@@ -11,7 +11,8 @@ setup(
         "falcon==1.1.0",
         "beautifulsoup4==4.5.1",
         "uWSGI==2.0.14",
-        "python-consul==0.7.0"
+        "python-consul==0.7.0",
+        "raven==6.1.0"
     ],
     test_suite="nose.collector",
     tests_require=[
