@@ -1,8 +1,12 @@
 import logging
 import hashlib
+from os import getcwd, path
 
 from gunicorn.app.base import BaseApplication
 from consul import Consul, Check
+
+from tas.configuration.loaders import Configuration
+from tas.application import create_app
 
 
 logger = logging.getLogger(__name__)
@@ -22,24 +26,66 @@ def generate_service_id(service_name, host, port):
     return "{}".format(hashlib.md5(service_info).hexdigest())
 
 
+def _extract_gunicorn_options(configuration):
+    options = {
+        "preload_app": False,
+        "bind": "{host}:{port}".format(
+            host=configuration["HOST"],
+            port=configuration["PORT"]
+        ),
+        "workers": configuration["WORKERS"],
+        "worker_class": "sync",
+        "max_requests": configuration["WORKER_MAX_REQUESTS"],
+        "max_requests_jitter":
+            configuration["WORKER_MAX_REQUESTS_JITTER"],
+    }
+
+    return options
+
+
 class Server(BaseApplication):
-    """The text analysis service server
+    """A standalone gunicorn server"""
 
-    Server is responsible for registering tas to consul and starting the
-    application server
-    """
-
-    def __init__(self, app, options=None, configuration=None):
-        """Create a new server object
+    def __init__(self, app, options=None):
+        """Create a new Server object
 
         :param falcon.API app: the falcon application
-        :param dict options: the gunicorn configuration options
-        :param dict configuration: the wsgi application configuration
+        :param dict options: the gunicorn configuration
         """
         self.options = options or {}
-        self.configuration = configuration or {}
         self.application = app
+
         super(Server, self).__init__()
+
+    def load_config(self):
+        for key, value in self.options.items():
+            if key in self.cfg.settings and value is not None:
+                self.cfg.set(key, value)
+
+    def load(self):
+        return self.application
+
+
+class TextAnalysisServiceServer(Server):
+    """The text analysis service server
+
+    TextAnalysisServiceServer is responsible for registering tas to consul and
+    starting the application server
+    """
+
+    def __init__(self, configuration_path):
+        """Create a new TextAnalysisServiceServer object
+
+        :param str configuration_path: the path to the application
+            configuration file
+        """
+        settings_file = path.join(getcwd(), "settings.py")
+        self.configuration = Configuration.load_from_py(settings_file)
+
+        options = _extract_gunicorn_options(self.configuration)
+        app = create_app(settings_file)
+
+        super(TextAnalysisServiceServer, self).__init__(app, options)
 
     def _register_service(self):
         logger.info("registering service to consul")
@@ -116,14 +162,9 @@ class Server(BaseApplication):
             self._deregister_service()
 
     def load_config(self):
-        for key, value in self.options.items():
-            if key in self.cfg.settings and value is not None:
-                self.cfg.set(key, value)
+        super(TextAnalysisServiceServer, self).load_config()
 
         # we have to setup the hooks using lambdas in order to avoid the
         # function arity checks of gunicorn
         self.cfg.set("on_starting", lambda server: self._on_starting(server))
         self.cfg.set("on_exit", lambda server: self._on_exit(server))
-
-    def load(self):
-        return self.application

@@ -20,6 +20,7 @@ class Configuration(dict):
         self["SENTRY_LOG_LEVEL"] = logging.ERROR
         self["WORKER_MAX_REQUESTS"] = 100
         self["WORKER_MAX_REQUESTS_JITTER"] = 10
+        self["WORKERS"] = 2
         self["HOST"] = "localhost"
         self["PORT"] = 8020
 

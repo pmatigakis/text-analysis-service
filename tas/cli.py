@@ -1,35 +1,15 @@
-from os import getcwd, path
+from os import getcwd
 from argparse import ArgumentParser
 
-from tas.configuration.loaders import Configuration
-from tas.servers import Server
-from tas.application import create_app
+from tas.servers import TextAnalysisServiceServer
 
 
 def run(args):
-    settings_file = path.join(getcwd(), "settings.py")
+    configuration_path = getcwd()
 
-    configuration = Configuration.load_from_py(settings_file)
+    tas_server = TextAnalysisServiceServer(configuration_path)
 
-    worker_max_requests = configuration.get(
-        "WORKER_MAX_REQUESTS", 100)
-    worker_request_jitter = configuration.get(
-        "WORKER_MAX_REQUESTS_JITTER", 10)
-
-    options = {
-        "preload_app": False,
-        "bind": "{host}:{port}".format(
-            host=configuration["HOST"],
-            port=configuration["PORT"]
-        ),
-        "workers": 1,
-        "max_requests": worker_max_requests,
-        "max_requests_jitter": worker_request_jitter,
-    }
-
-    app = create_app(settings_file)
-
-    Server(app, options, configuration).run()
+    tas_server.run()
 
 
 def get_arguments():
