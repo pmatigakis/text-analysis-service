@@ -4,18 +4,8 @@ from logging.handlers import RotatingFileHandler
 from falcon import API
 from raven.handlers.logging import SentryHandler
 
-from tas.resources import ProcessHTML, Health, Information
 from tas.configuration.loaders import Configuration
-
-
-def _load_resources(configuration, app):
-    process_html_resource = ProcessHTML(
-        keyword_stop_list=configuration["KEYWORD_STOP_LIST"]
-    )
-
-    app.add_route("/api/v1/process", process_html_resource)
-    app.add_route("/service/health", Health())
-    app.add_route("/service/information", Information(configuration))
+from tas.routes import load_resources
 
 
 def _setup_logging(configuration):
@@ -71,6 +61,6 @@ def create_app(settings_file):
     if configuration["SENTRY_DSN"]:
         _initialize_sentry(configuration)
 
-    _load_resources(configuration, app)
+    load_resources(configuration, app)
 
     return app
