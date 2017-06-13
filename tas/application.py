@@ -1,4 +1,5 @@
 import logging
+from logging.handlers import RotatingFileHandler
 
 from falcon import API
 from raven.handlers.logging import SentryHandler
@@ -34,6 +35,16 @@ def _setup_logging(configuration):
     stream_handler.setLevel(log_level)
     stream_handler.setFormatter(formatter)
     logger.addHandler(stream_handler)
+
+    if configuration["LOG_FILE"] is not None:
+        file_handler = RotatingFileHandler(
+            configuration["LOG_FILE"],
+            maxBytes=configuration["LOG_FILE_MAX_SIZE"],
+            backupCount=configuration["LOG_FILE_COUNT"]
+        )
+        file_handler.setLevel(log_level)
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
 
     for log_handler in configuration["LOG_HANDLERS"]:
         log_handler.setFormatter(formatter)

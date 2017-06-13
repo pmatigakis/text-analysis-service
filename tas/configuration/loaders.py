@@ -24,6 +24,9 @@ class Configuration(dict):
         self["HOST"] = "localhost"
         self["PORT"] = 8020
         self["LOG_LEVEL"] = logging.INFO
+        self["LOG_FILE"] = None
+        self["LOG_FILE_COUNT"] = 5
+        self["LOG_FILE_MAX_SIZE"] = 1000000
         self["LOG_HANDLERS"] = []
         self["KEYWORD_STOP_LIST"] = "SmartStoplist.txt"
         self["DEBUG"] = False
