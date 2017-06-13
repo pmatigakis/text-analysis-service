@@ -23,6 +23,11 @@ class Configuration(dict):
         self["WORKERS"] = 2
         self["HOST"] = "localhost"
         self["PORT"] = 8020
+        self["LOG_LEVEL"] = logging.INFO
+        self["LOG_HANDLERS"] = []
+        self["KEYWORD_STOP_LIST"] = "SmartStoplist.txt"
+        self["DEBUG"] = False
+        self["TESTING"] = False
 
     @classmethod
     def load_from_py(cls, filename):

@@ -7,7 +7,7 @@ from tas.resources import ProcessHTML, Health, Information
 from tas.configuration.loaders import Configuration
 
 
-def load_resources(configuration, app):
+def _load_resources(configuration, app):
     process_html_resource = ProcessHTML(
         keyword_stop_list=configuration["KEYWORD_STOP_LIST"]
     )
@@ -17,7 +17,7 @@ def load_resources(configuration, app):
     app.add_route("/service/information", Information(configuration))
 
 
-def setup_logging(configuration):
+def _setup_logging(configuration):
     logger = logging.getLogger("tas")
     logger.handlers = []
 
@@ -29,16 +29,17 @@ def setup_logging(configuration):
 
     if configuration["DEBUG"]:
         log_level = logging.DEBUG
-        stream_handler = logging.StreamHandler()
-        stream_handler.setLevel(logging.DEBUG)
-        stream_handler.setFormatter(formatter)
-        logger.addHandler(stream_handler)
 
-    logger.setLevel(log_level)
+    stream_handler = logging.StreamHandler()
+    stream_handler.setLevel(log_level)
+    stream_handler.setFormatter(formatter)
+    logger.addHandler(stream_handler)
 
     for log_handler in configuration["LOG_HANDLERS"]:
         log_handler.setFormatter(formatter)
         logger.addHandler(log_handler)
+
+    logger.setLevel(log_level)
 
 
 def _initialize_sentry(configuration):
@@ -54,12 +55,11 @@ def create_app(settings_file):
 
     app = API()
 
-    if configuration["ENABLE_LOGGING"]:
-        setup_logging(configuration)
+    _setup_logging(configuration)
 
     if configuration["SENTRY_DSN"]:
         _initialize_sentry(configuration)
 
-    load_resources(configuration, app)
+    _load_resources(configuration, app)
 
     return app
