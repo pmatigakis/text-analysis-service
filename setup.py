@@ -12,7 +12,8 @@ setup(
         "beautifulsoup4==4.5.1",
         "python-consul==0.7.0",
         "raven==6.1.0",
-        "gunicorn==19.7.1"
+        "gunicorn==19.7.1",
+        "Sphinx==1.6.2"
     ],
     test_suite="nose.collector",
     tests_require=[

@@ -6,3 +6,4 @@ Text_analysis_service.egg-info/
 cover/
 .coverage
 *.log
+docs/build/
