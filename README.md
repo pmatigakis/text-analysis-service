@@ -1,14 +1,5 @@
-Test analysis service
+TAS (text analysis service) is the application that is used by the TopicAxis API
+to extract information from plain text.
 
-### Installation
-Install dependencies from the `requirements.txt` file
-
-```
-pip install -r requirements
-```
-
-Install `tas`
-
-```
-python setup.py install
-```
+Build the Sphinx documentation in the ``docs`` folder for instructions on how
+to install and run TAS.
