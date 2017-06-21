@@ -6,10 +6,16 @@
 Welcome to TAS's documentation!
 ===============================
 
+TAS (text analysis service) is the application that is used by the TopicAxis API
+to extract information from plain text.
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
+   installation
+   configuration
+   running
 
 
 Indices and tables
