@@ -32,29 +32,11 @@ These configuration variables are optional.
    Default: ``False``
 
 
-.. py:data:: LOG_LEVEL
+.. py:data:: LOGGING
 
-   Set the log level.
-
-   Default: ``INFO``
-
-.. py:data:: LOG_FILE
-
-   The path to the log log file. By default logging to file is disabled.
+   A dictionary with the python logger configuration.
 
    Default: ``None``
-
-.. py:data:: LOG_FILE_COUNT
-
-   The number of log files to keep if they have exceeded their maximum size
-
-   Default: ``5``
-
-.. py:data:: LOG_FILE_MAX_SIZE
-
-   The maximum log file size in bytes
-
-   Default: ``1000000``
 
 .. py:data:: CONSUL_HOST
 
@@ -90,16 +72,6 @@ These configuration variables are optional.
    The time after which Consul will assume a timeout has occurred.
 
    Default: ``5s``
-
-.. py:data:: SENTRY_DSN
-
-   The connection string for Sentry.
-
-.. py:data:: SENTRY_LOG_LEVEL
-
-   The log level used for Sentry.
-
-   Default: ``ERROR``
 
 .. py:data:: WORKER_MAX_REQUESTS
 
