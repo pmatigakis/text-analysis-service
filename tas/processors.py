@@ -2,8 +2,8 @@ from abc import ABCMeta, abstractmethod
 import logging
 
 from bs4 import BeautifulSoup
-from opengraph import OpenGraph
-from goose import Goose
+from opengraph.opengraph import OpenGraph
+from newspaper import fulltext
 from rake.rake import Rake
 from rake.stoplists import get_stoplist_file_path
 
@@ -34,23 +34,15 @@ class HTMLContentProcessor(ContentProcessor):
 
         :param str keyword_stop_list: the keyword stop list to use
         """
-        self.goose = Goose()
-
         keyword_stop_list = keyword_stop_list or "SmartStoplist.txt"
         self.rake = Rake(get_stoplist_file_path(keyword_stop_list))
 
     def _extract_page_content(self, request_body):
         try:
-            article = self.goose.extract(raw_html=request_body)
+            content = fulltext(request_body)
         except Exception:
             logger.exception("failed to extract content")
             return {"error": "failed to extract content"}
-
-        if article is None:
-            content = None
-            logger.warning("no content found in page")
-        else:
-            content = article.cleaned_text
 
         return {"text": content}
 
@@ -110,7 +102,7 @@ class HTMLContentProcessor(ContentProcessor):
         twitter_card = self._extract_twitter_card(soup)
 
         if ("text" in extracted_content and
-                isinstance(extracted_content["text"], (str, unicode)) and
+                isinstance(extracted_content["text"], str) and
                 len(extracted_content["text"]) != 0):
             extracted_content["keywords"] = self._extract_keywords(
                 extracted_content["text"])

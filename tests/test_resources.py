@@ -1,11 +1,10 @@
 from os import path
 from unittest import main
+from unittest.mock import patch
 import json
 
 from falcon.testing import TestCase
-from mock import patch
-from goose import Goose
-from opengraph import OpenGraph
+from opengraph.opengraph import OpenGraph
 
 from tas.application import create_app
 from tas.resources import HTMLContentProcessor
@@ -113,9 +112,9 @@ class ProcessHtmlTests(ResourceTestCase):
             }
         )
 
-    @patch.object(Goose, "extract")
-    def test_failed_to_extract_page_content(self, extract_mock):
-        extract_mock.side_effect = Exception()
+    @patch("tas.processors.fulltext")
+    def test_failed_to_extract_page_content(self, fulltext_mock):
+        fulltext_mock.side_effect = Exception()
 
         response = self.simulate_post(
             "/api/v1/process",
@@ -161,9 +160,9 @@ class ProcessHtmlTests(ResourceTestCase):
             }
         )
 
-    @patch.object(Goose, "extract")
-    def test_page_does_not_have_any_content(self, extract_mock):
-        extract_mock.return_value = None
+    @patch("tas.processors.fulltext")
+    def test_page_does_not_have_any_content(self, fulltext_mock):
+        fulltext_mock.return_value = None
 
         response = self.simulate_post(
             "/api/v1/process", body=page_contents)

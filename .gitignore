@@ -1,5 +1,6 @@
 .idea/
 virtualenv/
+virtualenv3/
 *.pyc
 temp/
 Text_analysis_service.egg-info/

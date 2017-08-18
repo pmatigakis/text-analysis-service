@@ -18,7 +18,7 @@ environment.
 
 .. code-block:: shell
 
-   virtualenv --python=python2.7 virtualenv
+   virtualenv --python=python3 virtualenv
    source virtualenv/bin/activate
 
 Download the TAS source code. This example will download the latest

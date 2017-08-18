@@ -47,7 +47,7 @@ class ProcessHTML(object):
             )
 
         try:
-            body = json.loads(body)
+            body = json.loads(body.decode("utf8"))
         except ValueError:
             logger.exception("failed to decode request body")
 
