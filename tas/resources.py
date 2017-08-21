@@ -1,5 +1,6 @@
 import logging
 import json
+import time
 
 from falcon import HTTP_200, HTTPBadRequest, HTTPInternalServerError
 
@@ -34,6 +35,8 @@ class ProcessHTML(object):
         )
 
     def on_post(self, req, resp):
+        request_start_time = time.perf_counter()
+
         logger.info("processing html content")
 
         body = req.stream.read()
@@ -92,6 +95,12 @@ class ProcessHTML(object):
         resp.status = HTTP_200
         resp.content_type = "application/json"
         resp.body = json.dumps(processing_result)
+
+        log_msg = "page processing request executed: " \
+                  "execution_time({execution_time})"
+        logger.info(log_msg.format(
+            execution_time=time.perf_counter() - request_start_time
+        ))
 
 
 class Health(object):
