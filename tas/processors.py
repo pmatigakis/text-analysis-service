@@ -7,8 +7,15 @@ from newspaper import fulltext
 from rake.rake import Rake
 from rake.stoplists import get_stoplist_file_path
 
+from tas.exceptions import TASError
+
 
 logger = logging.getLogger(__name__)
+
+
+class HTMLContentProcessorError(TASError):
+    """Exception that is raised when the page content could not be processed"""
+    pass
 
 
 class ContentProcessor(object):
@@ -42,7 +49,7 @@ class HTMLContentProcessor(ContentProcessor):
             content = fulltext(request_body)
         except Exception:
             logger.exception("failed to extract content")
-            return {"error": "failed to extract content"}
+            raise HTMLContentProcessorError()
 
         return {"text": content}
 
@@ -101,8 +108,7 @@ class HTMLContentProcessor(ContentProcessor):
         opengraph_data = self._extract_opengraph_data(content)
         twitter_card = self._extract_twitter_card(soup)
 
-        if ("text" in extracted_content and
-                isinstance(extracted_content["text"], str) and
+        if (isinstance(extracted_content["text"], str) and
                 len(extracted_content["text"]) != 0):
             extracted_content["keywords"] = self._extract_keywords(
                 extracted_content["text"])

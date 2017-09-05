@@ -8,6 +8,8 @@ from opengraph.opengraph import OpenGraph
 
 from tas.application import create_app
 from tas.resources import HTMLContentProcessor
+from tas import error_codes
+from tas.processors import HTMLContentProcessorError
 
 
 page_contents = """
@@ -113,7 +115,8 @@ class ProcessHtmlTests(ResourceTestCase):
         )
 
     @patch("tas.processors.fulltext")
-    def test_failed_to_extract_page_content(self, fulltext_mock):
+    def test_failed_to_extract_page_content_newspaper_raised_exception(
+            self, fulltext_mock):
         fulltext_mock.side_effect = Exception()
 
         response = self.simulate_post(
@@ -124,39 +127,36 @@ class ProcessHtmlTests(ResourceTestCase):
             }
         )
 
-        self.assertIn("content", response.json)
+        self.assertEqual(response.status_code, 404)
         self.assertDictEqual(
-            response.json["content"],
-            {'error': 'failed to extract content', 'title': 'test page'}
-        )
-
-        self.assertNotIn("keywords", response.json["content"])
-
-        self.assertIn("social", response.json)
-        self.assertIn("opengraph", response.json["social"])
-        self.assertIn("twitter", response.json["social"])
-
-        self.assertDictEqual(
-            response.json["social"]["opengraph"],
+            response.json,
             {
-                'description': 'test page description',
-                'title': 'test page title',
-                'url': 'http://example.com/test_page',
-                'image': 'https://example.com/image.png',
-                'scrape': False,
-                'type': 'article'
+                'code': error_codes.TAS_ERROR,
+                'description': 'Failed to process content',
+                'title': 'Processing error'
             }
         )
 
+    @patch("tas.resources.HTMLContentProcessor.process_content")
+    def test_failed_to_extract_page_content(
+            self, process_content_mock):
+        process_content_mock.side_effect = HTMLContentProcessorError()
+
+        response = self.simulate_post(
+            "/api/v1/process",
+            body=json.dumps(request_body),
+            headers={
+                "Content-Type": "application/json"
+            }
+        )
+
+        self.assertEqual(response.status_code, 404)
         self.assertDictEqual(
-            response.json["social"]["twitter"],
+            response.json,
             {
-                'description': 'test card description',
-                'creator': '@user',
-                'title': 'test twitter card',
-                'site': '@topicaxis',
-                'image:src': 'http://example.com/image.png',
-                'card': 'summary_large_image'
+                'code': error_codes.TAS_ERROR,
+                'description': 'Failed to process content',
+                'title': 'Processing error'
             }
         )
 
