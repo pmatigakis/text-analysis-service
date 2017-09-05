@@ -1,0 +1,2 @@
+class TASError(Exception):
+    pass

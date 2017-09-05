@@ -2,10 +2,10 @@ import logging
 import json
 import time
 
-from falcon import HTTP_200, HTTPBadRequest, HTTPInternalServerError
+from falcon import HTTP_200, HTTPBadRequest, HTTPNotFound
 
 from tas import error_codes, __VERSION__
-from tas.processors import HTMLContentProcessor
+from tas.processors import HTMLContentProcessor, HTMLContentProcessorError
 
 
 logger = logging.getLogger(__name__)
@@ -83,10 +83,18 @@ class ProcessHTML(object):
         try:
             processing_result = content_processor.process_content(
                 body["content"])
+        except HTMLContentProcessorError:
+            logger.warning("failed to extract content ")
+
+            raise HTTPNotFound(
+                title="Processing error",
+                description="Failed to process content",
+                code=error_codes.TAS_ERROR
+            )
         except Exception:
             logger.exception("failed to process content")
 
-            raise HTTPInternalServerError(
+            raise HTTPNotFound(
                 title="Processing error",
                 description="Failed to process content",
                 code=error_codes.TAS_ERROR
