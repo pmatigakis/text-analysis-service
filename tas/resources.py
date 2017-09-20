@@ -26,6 +26,11 @@ class ProcessHTML(object):
         if request_content_type.startswith("text/html"):
             return HTMLContentProcessor(self.keyword_stop_list)
 
+        logger.warning(
+            "unsupported request content type: content_type=%s",
+            request_content_type
+        )
+
         # this content type is not supported
         raise HTTPBadRequest(
             title='Invalid request body',
@@ -62,6 +67,8 @@ class ProcessHTML(object):
             )
 
         if not self._is_valid_request_body(body):
+            logger.warning("invalid processing request body")
+
             raise HTTPBadRequest(
                 title='Invalid request body',
                 description='The contents of the request are not in the '
@@ -70,6 +77,11 @@ class ProcessHTML(object):
             )
 
         if not self._is_supported_content_type(body["content_type"]):
+            logger.warning(
+                "unsupported content type: content_type=%s",
+                body["content_type"]
+            )
+
             raise HTTPBadRequest(
                 title='Invalid request body',
                 description='The content type "{}" is not supported'.format(
