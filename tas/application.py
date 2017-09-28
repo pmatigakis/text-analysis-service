@@ -4,6 +4,7 @@ from falcon import API
 
 from tas.configuration.loaders import Configuration
 from tas.routes import load_resources
+from tas.metrics.utils import configure_metrics_from_dict
 
 
 def _setup_logging(configuration):
@@ -21,5 +22,6 @@ def create_app(settings_file):
     _setup_logging(configuration)
 
     load_resources(configuration, app)
+    configure_metrics_from_dict(configuration)
 
     return app

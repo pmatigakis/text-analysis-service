@@ -12,7 +12,8 @@ setup(
         "python-consul==0.7.0",
         "gunicorn==19.7.1",
         "Sphinx==1.6.2",
-        "newspaper3k==0.2.2"
+        "newspaper3k==0.2.2",
+        "statsd==3.2.1"
     ],
     test_suite="nose.collector",
     tests_require=[
