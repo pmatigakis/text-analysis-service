@@ -3,7 +3,8 @@ language: python
 python:
   - "3.4"
 install:
-  - python setup.py install
+  - pip install -r requirements.txt
+  - pip install .
 after_success:
   - bash <(curl -s https://codecov.io/bash)
 script:
