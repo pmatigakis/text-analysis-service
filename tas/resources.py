@@ -6,7 +6,7 @@ from falcon import HTTP_200, HTTPBadRequest, HTTPNotFound
 
 from tas import error_codes, __VERSION__
 from tas.processors import HTMLContentProcessor, HTMLContentProcessorError
-from tas.metrics.utils import metrics
+from tas.metrics.decorators import capture_metrics
 
 
 PROCESS_HTML_REQUEST_COUNTER = "topicaxis.tas.processhtml.request"
@@ -46,16 +46,20 @@ class ProcessHTML(object):
             code=error_codes.INVALID_REQUEST_BODY
         )
 
+    @capture_metrics(
+        request_metric=PROCESS_HTML_REQUEST_COUNTER,
+        error_metric=PROCESS_HTML_ERROR_COUNTER,
+        success_metric=PROCESS_HTML_SUCCESS_COUNTER,
+        execution_time_metric=PROCESS_HTML_EXECUTION_TIME
+    )
     def on_post(self, req, resp):
         request_start_time = time.perf_counter()
 
         logger.info("processing html content")
-        metrics.incr(PROCESS_HTML_REQUEST_COUNTER)
 
         body = req.stream.read()
         if not body:
             logger.warning("Empty request body")
-            metrics.incr(PROCESS_HTML_ERROR_COUNTER)
 
             raise HTTPBadRequest(
                 title='Empty request body',
@@ -67,7 +71,6 @@ class ProcessHTML(object):
             body = json.loads(body.decode("utf8"))
         except ValueError:
             logger.exception("failed to decode request body")
-            metrics.incr(PROCESS_HTML_ERROR_COUNTER)
 
             raise HTTPBadRequest(
                 title='Invalid request body',
@@ -78,7 +81,6 @@ class ProcessHTML(object):
 
         if not self._is_valid_request_body(body):
             logger.warning("invalid processing request body")
-            metrics.incr(PROCESS_HTML_ERROR_COUNTER)
 
             raise HTTPBadRequest(
                 title='Invalid request body',
@@ -92,7 +94,6 @@ class ProcessHTML(object):
                 "unsupported content type: content_type=%s",
                 body["content_type"]
             )
-            metrics.incr(PROCESS_HTML_ERROR_COUNTER)
 
             raise HTTPBadRequest(
                 title='Invalid request body',
@@ -109,7 +110,6 @@ class ProcessHTML(object):
                 body["content"])
         except HTMLContentProcessorError:
             logger.warning("failed to extract content ")
-            metrics.incr(PROCESS_HTML_ERROR_COUNTER)
 
             raise HTTPNotFound(
                 title="Processing error",
@@ -118,7 +118,6 @@ class ProcessHTML(object):
             )
         except Exception:
             logger.exception("failed to process content")
-            metrics.incr(PROCESS_HTML_ERROR_COUNTER)
 
             raise HTTPNotFound(
                 title="Processing error",
@@ -136,10 +135,6 @@ class ProcessHTML(object):
         logger.info(log_msg.format(
             execution_time=execution_time
         ))
-
-        metrics.incr(PROCESS_HTML_SUCCESS_COUNTER)
-        # the timing must be in milliseconds
-        metrics.timing(PROCESS_HTML_EXECUTION_TIME, execution_time * 1000)
 
 
 class Health(object):

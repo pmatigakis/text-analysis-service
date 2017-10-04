@@ -29,3 +29,7 @@ def configure_metrics_from_dict(config):
         )
 
         metrics.add_listener(listener)
+
+
+def get_metrics():
+    return metrics
