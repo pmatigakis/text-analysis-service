@@ -57,8 +57,10 @@ class HTMLContentProcessor(ContentProcessor):
         response = {}
 
         title = soup.find("title")
-        if title:
-            response["title"] = title.text
+        # TODO: this is not tested.
+        # We need to investigate if it is better to return None instead of an
+        # empty string
+        response["title"] = title.text if title else ""
 
         return response
 
