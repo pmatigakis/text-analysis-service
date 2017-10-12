@@ -3,10 +3,12 @@ import json
 import time
 
 from falcon import HTTP_200, HTTPBadRequest, HTTPNotFound
+import jsonschema
 
 from tas import error_codes, __VERSION__
 from tas.processors import HTMLContentProcessor, HTMLContentProcessorError
 from tas.metrics.decorators import capture_metrics
+from tas.schemas import process_html_payload_schema
 
 
 PROCESS_HTML_REQUEST_COUNTER = "topicaxis.tas.processhtml.request"
@@ -23,7 +25,13 @@ class ProcessHTML(object):
         self.keyword_stop_list = keyword_stop_list
 
     def _is_valid_request_body(self, request_body):
-        return "content_type" in request_body and "content" in request_body
+        try:
+            jsonschema.validate(request_body, process_html_payload_schema)
+        except jsonschema.ValidationError:
+            logger.exception("invalid process_html request payload")
+            return False
+
+        return True
 
     def _is_supported_content_type(self, request_body_content_type):
         # only text/html is supported for the moment

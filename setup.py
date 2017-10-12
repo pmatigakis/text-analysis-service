@@ -13,7 +13,8 @@ setup(
         "gunicorn==19.7.1",
         "Sphinx==1.6.2",
         "newspaper3k==0.2.2",
-        "statsd==3.2.1"
+        "statsd==3.2.1",
+        "jsonschema==2.6.0"
     ],
     test_suite="nose.collector",
     tests_require=[
