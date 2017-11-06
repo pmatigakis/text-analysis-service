@@ -1,10 +1,10 @@
 import logging.config
 
 from falcon import API
+from metricslib.utils import configure_metrics_from_dict
 
 from tas.configuration.loaders import Configuration
 from tas.routes import load_resources
-from tas.metrics.utils import configure_metrics_from_dict
 
 
 def _setup_logging(configuration):

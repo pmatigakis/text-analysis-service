@@ -4,10 +4,10 @@ import time
 
 from falcon import HTTP_200, HTTPBadRequest, HTTPNotFound
 import jsonschema
+from metricslib.decorators import capture_metrics
 
 from tas import error_codes, __VERSION__
 from tas.processors import HTMLContentProcessor, HTMLContentProcessorError
-from tas.metrics.decorators import capture_metrics
 from tas.schemas import process_html_payload_schema
 
 
