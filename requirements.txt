@@ -8,4 +8,4 @@ statsd==3.2.1
 jsonschema==2.6.0
 -e git+https://github.com/topicaxis/opengraph.git#egg=opengraph
 -e git+https://github.com/pmatigakis/RAKE.git#egg=RAKE
--e git+https://github.com/topicaxis/metricslib.git@develop#egg=metricslib
+-e git+https://github.com/topicaxis/metricslib.git@v0.1.0#egg=metricslib
