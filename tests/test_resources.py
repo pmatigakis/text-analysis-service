@@ -81,7 +81,7 @@ class ProcessHtmlTests(ResourceTestCase):
         self.assertEqual("test page", response.json["content"]["title"])
 
         self.assertIn("keywords", response.json["content"])
-        self.assertIsInstance(response.json["content"]["keywords"], list)
+        self.assertIsInstance(response.json["content"]["keywords"], dict)
 
         # TODO: for the moment just check if there are any keywords
         self.assertTrue(len(response.json["content"]["keywords"]) > 0)

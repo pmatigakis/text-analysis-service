@@ -100,6 +100,11 @@ class HTMLContentProcessor(ContentProcessor):
     def _extract_keywords(self, text):
         keywords = self.rake.run(text)
 
+        keywords = {
+            keyword: score
+            for keyword, score in keywords
+        }
+
         return keywords
 
     def process_content(self, content):
