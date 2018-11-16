@@ -7,7 +7,6 @@ from falcon.testing import TestCase
 from opengraph.opengraph import OpenGraph
 
 from tas.application import create_app
-from tas.resources import HTMLContentProcessor
 from tas import error_codes
 from tas.processors import HTMLContentProcessorError
 
@@ -137,7 +136,7 @@ class ProcessHtmlTests(ResourceTestCase):
             }
         )
 
-    @patch("tas.resources.HTMLContentProcessor.process_content")
+    @patch("tas.operations.HTMLContentProcessor.process_content")
     def test_failed_to_extract_page_content(
             self, process_content_mock):
         process_content_mock.side_effect = HTMLContentProcessorError()
@@ -195,7 +194,7 @@ class ProcessHtmlTests(ResourceTestCase):
 
         self.assertIsNone(response.json["social"]["opengraph"])
 
-    @patch.object(HTMLContentProcessor, "_extract_page_content")
+    @patch("tas.operations.HTMLContentProcessor._extract_page_content")
     def test_failed_to_extract_opengraph_data_when_exception_is_raised(
             self, extract_page_content_mock):
         extract_page_content_mock.side_effect = Exception
@@ -218,7 +217,7 @@ class ProcessHtmlTests(ResourceTestCase):
             }
         )
 
-    @patch.object(HTMLContentProcessor, "_extract_keywords")
+    @patch("tas.operations.HTMLContentProcessor._extract_page_content")
     def test_failed_to_extract_keywords_when_exception_is_raised(
             self, extract_keywords_mock):
         extract_keywords_mock.side_effect = Exception

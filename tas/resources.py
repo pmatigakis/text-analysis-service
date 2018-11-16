@@ -7,7 +7,8 @@ import jsonschema
 from metricslib.decorators import capture_metrics
 
 from tas import error_codes, __VERSION__
-from tas.processors import HTMLContentProcessor, HTMLContentProcessorError
+from tas.operations import UnsupportedContentType
+from tas.processors import HTMLContentProcessorError
 from tas.schemas import process_html_payload_schema
 
 
@@ -21,8 +22,8 @@ logger = logging.getLogger(__name__)
 
 
 class ProcessHTML(object):
-    def __init__(self, keyword_stop_list=None):
-        self.keyword_stop_list = keyword_stop_list
+    def __init__(self, content_analyser):
+        self.content_analyser = content_analyser
 
     def _is_valid_request_body(self, request_body):
         try:
@@ -32,27 +33,6 @@ class ProcessHTML(object):
             return False
 
         return True
-
-    def _is_supported_content_type(self, request_body_content_type):
-        # only text/html is supported for the moment
-        return request_body_content_type.startswith("text/html")
-
-    def _select_content_processor(self, request_content_type):
-        if request_content_type.startswith("text/html"):
-            return HTMLContentProcessor(self.keyword_stop_list)
-
-        logger.warning(
-            "unsupported request content type: content_type=%s",
-            request_content_type
-        )
-
-        # this content type is not supported
-        raise HTTPBadRequest(
-            title='Invalid request body',
-            description='The content type "{}" is not supported'.format(
-                request_content_type),
-            code=error_codes.INVALID_REQUEST_BODY
-        )
 
     @capture_metrics(
         request_metric=PROCESS_HTML_REQUEST_COUNTER,
@@ -97,25 +77,21 @@ class ProcessHTML(object):
                 code=error_codes.INVALID_REQUEST_BODY
             )
 
-        if not self._is_supported_content_type(body["content_type"]):
+        try:
+            processing_result = self.content_analyser.process_content(body)
+        except UnsupportedContentType:
             logger.warning(
-                "unsupported content type: content_type=%s",
+                "unsupported request content type: content_type=%s",
                 body["content_type"]
             )
 
+            # this content type is not supported
             raise HTTPBadRequest(
                 title='Invalid request body',
                 description='The content type "{}" is not supported'.format(
                     body["content_type"]),
                 code=error_codes.INVALID_REQUEST_BODY
             )
-
-        content_processor = self._select_content_processor(
-            body["content_type"])
-
-        try:
-            processing_result = content_processor.process_content(
-                body["content"])
         except HTMLContentProcessorError:
             logger.warning("failed to extract content ")
 
