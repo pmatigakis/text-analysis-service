@@ -7,8 +7,8 @@ import jsonschema
 from metricslib.decorators import capture_metrics
 
 from tas import error_codes, __VERSION__
-from tas.operations import UnsupportedContentType
-from tas.processors import HTMLContentProcessorError
+from tas.error_handlers import ProcessHTMLErrorHandler
+from tas.exceptions import TASError
 from tas.schemas import process_html_payload_schema
 
 
@@ -24,6 +24,8 @@ logger = logging.getLogger(__name__)
 class ProcessHTML(object):
     def __init__(self, content_analyser):
         self.content_analyser = content_analyser
+
+        self._error_handler = ProcessHTMLErrorHandler()
 
     def _is_valid_request_body(self, request_body):
         try:
@@ -79,35 +81,18 @@ class ProcessHTML(object):
 
         try:
             processing_result = self.content_analyser.process_content(body)
-        except UnsupportedContentType:
-            logger.warning(
-                "unsupported request content type: content_type=%s",
-                body["content_type"]
-            )
+        except TASError as e:
+            logger.warning("TAS failed to failed to process content")
 
-            # this content type is not supported
-            raise HTTPBadRequest(
-                title='Invalid request body',
-                description='The content type "{}" is not supported'.format(
-                    body["content_type"]),
-                code=error_codes.INVALID_REQUEST_BODY
-            )
-        except HTMLContentProcessorError:
-            logger.warning("failed to extract content ")
-
-            raise HTTPNotFound(
-                title="Processing error",
-                description="Failed to process content",
-                code=error_codes.TAS_ERROR
-            )
-        except Exception:
+            raise self._error_handler.handle_exception(e) from e
+        except Exception as e:
             logger.exception("failed to process content")
 
             raise HTTPNotFound(
                 title="Processing error",
                 description="Failed to process content",
                 code=error_codes.TAS_ERROR
-            )
+            ) from e
 
         resp.status = HTTP_200
         resp.content_type = "application/json"
