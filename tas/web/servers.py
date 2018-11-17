@@ -6,7 +6,7 @@ from gunicorn.app.base import BaseApplication
 from consul import Consul, Check
 
 from tas.configuration.loaders import Configuration
-from tas.application import create_app
+from tas.web.application import create_app
 
 
 logger = logging.getLogger(__name__)

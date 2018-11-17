@@ -3,7 +3,7 @@ from unittest import TestCase, main
 
 from falcon import API
 
-from tas.application import create_app
+from tas.web.application import create_app
 
 
 class ApplicationCreationTests(TestCase):

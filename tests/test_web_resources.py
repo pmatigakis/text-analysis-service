@@ -6,9 +6,9 @@ import json
 from falcon.testing import TestCase
 from opengraph.opengraph import OpenGraph
 
-from tas.application import create_app
-from tas import error_codes
-from tas.processors import HTMLContentProcessorError
+from tas.web.application import create_app
+from tas.web import error_codes
+from tas.analysis.processors import HTMLContentProcessorError
 
 
 page_contents = """
@@ -113,7 +113,7 @@ class ProcessHtmlTests(ResourceTestCase):
             }
         )
 
-    @patch("tas.processors.fulltext")
+    @patch("tas.analysis.processors.fulltext")
     def test_failed_to_extract_page_content_newspaper_raised_exception(
             self, fulltext_mock):
         fulltext_mock.side_effect = Exception()
@@ -136,7 +136,7 @@ class ProcessHtmlTests(ResourceTestCase):
             }
         )
 
-    @patch("tas.operations.HTMLContentProcessor.process_content")
+    @patch("tas.analysis.operations.HTMLContentProcessor.process_content")
     def test_failed_to_extract_page_content(
             self, process_content_mock):
         process_content_mock.side_effect = HTMLContentProcessorError()
@@ -159,7 +159,7 @@ class ProcessHtmlTests(ResourceTestCase):
             }
         )
 
-    @patch("tas.processors.fulltext")
+    @patch("tas.analysis.processors.fulltext")
     def test_page_does_not_have_any_content(self, fulltext_mock):
         fulltext_mock.return_value = None
 
@@ -194,7 +194,8 @@ class ProcessHtmlTests(ResourceTestCase):
 
         self.assertIsNone(response.json["social"]["opengraph"])
 
-    @patch("tas.operations.HTMLContentProcessor._extract_page_content")
+    @patch("tas.analysis.operations.HTMLContentProcessor."
+           "_extract_page_content")
     def test_failed_to_extract_opengraph_data_when_exception_is_raised(
             self, extract_page_content_mock):
         extract_page_content_mock.side_effect = Exception
@@ -217,7 +218,8 @@ class ProcessHtmlTests(ResourceTestCase):
             }
         )
 
-    @patch("tas.operations.HTMLContentProcessor._extract_page_content")
+    @patch("tas.analysis.operations.HTMLContentProcessor."
+           "_extract_page_content")
     def test_failed_to_extract_keywords_when_exception_is_raised(
             self, extract_keywords_mock):
         extract_keywords_mock.side_effect = Exception

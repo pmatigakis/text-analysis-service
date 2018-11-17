@@ -1,7 +1,7 @@
 from os import getcwd
 from argparse import ArgumentParser
 
-from tas.servers import TextAnalysisServiceServer
+from tas.web.servers import TextAnalysisServiceServer
 
 
 def run(args):

@@ -7,15 +7,10 @@ from newspaper import fulltext
 from rake.rake import Rake
 from rake.stoplists import get_stoplist_file_path
 
-from tas.exceptions import TASError
+from tas.analysis.exceptions import HTMLContentProcessorError
 
 
 logger = logging.getLogger(__name__)
-
-
-class HTMLContentProcessorError(TASError):
-    """Exception that is raised when the page content could not be processed"""
-    pass
 
 
 class ContentProcessor(object):

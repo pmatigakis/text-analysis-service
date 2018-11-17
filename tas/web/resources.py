@@ -6,10 +6,11 @@ from falcon import HTTP_200, HTTPBadRequest, HTTPNotFound
 import jsonschema
 from metricslib.decorators import capture_metrics
 
-from tas import error_codes, __VERSION__
-from tas.error_handlers import ProcessHTMLErrorHandler
+from tas import __VERSION__
+from tas.web import error_codes
+from tas.web.error_handlers import ProcessHTMLErrorHandler
 from tas.exceptions import TASError
-from tas.schemas import process_html_payload_schema
+from tas.web.schemas import process_html_payload_schema
 
 
 PROCESS_HTML_REQUEST_COUNTER = "topicaxis.tas.processhtml.request"
@@ -27,7 +28,8 @@ class ProcessHTML(object):
 
         self._error_handler = ProcessHTMLErrorHandler()
 
-    def _is_valid_request_body(self, request_body):
+    @staticmethod
+    def _is_valid_request_body(request_body):
         try:
             jsonschema.validate(request_body, process_html_payload_schema)
         except jsonschema.ValidationError:
@@ -35,6 +37,41 @@ class ProcessHTML(object):
             return False
 
         return True
+
+    def _extract_content_from_request(self, request):
+        content = request.stream.read()
+        if not content:
+            logger.warning("Empty request body")
+
+            raise HTTPBadRequest(
+                title='Empty request body',
+                description='The contents of a web page must be provided',
+                code=error_codes.EMPTY_REQUEST_BODY
+            )
+
+        try:
+            content = json.loads(content.decode("utf8"))
+        except ValueError:
+            logger.exception("failed to decode request body")
+
+            raise HTTPBadRequest(
+                title='Invalid request body',
+                description='The contents of the request body could not be '
+                            'decoded',
+                code=error_codes.INVALID_REQUEST_BODY
+            )
+
+        if not self._is_valid_request_body(content):
+            logger.warning("invalid processing request body")
+
+            raise HTTPBadRequest(
+                title='Invalid request body',
+                description='The contents of the request are not in the '
+                            'appropriate format',
+                code=error_codes.INVALID_REQUEST_BODY
+            )
+
+        return content
 
     @capture_metrics(
         request_metric=PROCESS_HTML_REQUEST_COUNTER,
@@ -47,40 +84,10 @@ class ProcessHTML(object):
 
         logger.info("processing html content")
 
-        body = req.stream.read()
-        if not body:
-            logger.warning("Empty request body")
-
-            raise HTTPBadRequest(
-                title='Empty request body',
-                description='The contents of a web page must be provided',
-                code=error_codes.EMPTY_REQUEST_BODY
-            )
+        content = self._extract_content_from_request(req)
 
         try:
-            body = json.loads(body.decode("utf8"))
-        except ValueError:
-            logger.exception("failed to decode request body")
-
-            raise HTTPBadRequest(
-                title='Invalid request body',
-                description='The contents of the request body could not be '
-                            'decoded',
-                code=error_codes.INVALID_REQUEST_BODY
-            )
-
-        if not self._is_valid_request_body(body):
-            logger.warning("invalid processing request body")
-
-            raise HTTPBadRequest(
-                title='Invalid request body',
-                description='The contents of the request are not in the '
-                            'appropriate format',
-                code=error_codes.INVALID_REQUEST_BODY
-            )
-
-        try:
-            processing_result = self.content_analyser.process_content(body)
+            processing_result = self.content_analyser.process_content(content)
         except TASError as e:
             logger.warning("TAS failed to failed to process content")
 

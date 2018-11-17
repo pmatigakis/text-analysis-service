@@ -1,17 +1,10 @@
 import logging
 
-from tas.exceptions import TASError
-from tas.processors import HTMLContentProcessor
+from tas.analysis.exceptions import UnsupportedContentType
+from tas.analysis.processors import HTMLContentProcessor
 
 
 logger = logging.getLogger(__name__)
-
-
-class UnsupportedContentType(TASError):
-    def __init__(self, content_type=None):
-        super(UnsupportedContentType, self).__init__(content_type)
-
-        self.content_type = content_type
 
 
 class ContentAnalyser(object):

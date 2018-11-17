@@ -1,7 +1,7 @@
 import logging
 
-from tas.operations import ContentAnalyser
-from tas.resources import ProcessHTML, Health, Information
+from tas.analysis.operations import ContentAnalyser
+from tas.web.resources import ProcessHTML, Health, Information
 
 
 logger = logging.getLogger(__name__)

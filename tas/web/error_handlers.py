@@ -1,9 +1,10 @@
 from abc import ABCMeta, abstractmethod
 import logging
 
-from tas import error_codes
-from tas.operations import UnsupportedContentType
-from tas.processors import HTMLContentProcessorError
+from tas.web import error_codes
+from tas.analysis.exceptions import (
+    UnsupportedContentType, HTMLContentProcessorError
+)
 
 from falcon import HTTPBadRequest, HTTPNotFound
 
