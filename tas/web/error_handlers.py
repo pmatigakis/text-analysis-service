@@ -94,7 +94,7 @@ class ProcessHTMLErrorHandler(ErrorHandlerBase):
         )
 
     def handle_unknown_exception(self, exception):
-        logger.exception("failed to process content")
+        logger.warning("failed to process content")
 
         return HTTPNotFound(
             title="Processing error",
