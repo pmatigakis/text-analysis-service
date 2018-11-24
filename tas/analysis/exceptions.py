@@ -6,6 +6,14 @@ class HTMLContentProcessorError(TASError):
     pass
 
 
+class InvalidHTMLContent(HTMLContentProcessorError):
+    """Exception that is raised in the html content is invalid"""
+    def __init__(self, errors=None):
+        super(InvalidHTMLContent, self).__init__(errors)
+
+        self.errors = errors
+
+
 class UnsupportedContentType(TASError):
     """Exception that is raised when the content type is not supported"""
 

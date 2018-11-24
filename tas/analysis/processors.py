@@ -1,13 +1,10 @@
 from abc import ABCMeta, abstractmethod
 import logging
 
-from bs4 import BeautifulSoup
-from opengraph.opengraph import OpenGraph
-from newspaper import fulltext
-from rake.rake import Rake
-from rake.stoplists import get_stoplist_file_path
+from text_analysis_helpers.html import HtmlAnalyser
 
-from tas.analysis.exceptions import HTMLContentProcessorError
+from tas.analysis.exceptions import InvalidHTMLContent
+from tas.analysis.schemas import WebPageSchema
 
 
 logger = logging.getLogger(__name__)
@@ -36,93 +33,39 @@ class HTMLContentProcessor(ContentProcessor):
 
         :param str keyword_stop_list: the keyword stop list to use
         """
-        keyword_stop_list = keyword_stop_list or "SmartStoplist.txt"
-        self.rake = Rake(get_stoplist_file_path(keyword_stop_list))
+        self.keyword_stop_list = keyword_stop_list or "SmartStoplist.txt"
 
-    def _extract_page_content(self, request_body):
-        try:
-            content = fulltext(request_body)
-        except Exception:
-            logger.exception("failed to extract content")
-            raise HTMLContentProcessorError()
+        self.__html_analyser = HtmlAnalyser(self.keyword_stop_list)
+        self.__web_page_schema = WebPageSchema()
 
-        return {"text": content}
+    def _deserialize_content(self, content):
+        result = self.__web_page_schema.load(content)
+        if result.errors:
+            logger.warning("invalid html contenbt: errors=%s", result.errors)
 
-    def _extract_page_data(self, soup):
-        response = {}
+            raise InvalidHTMLContent(result.errors)
 
-        title = soup.find("title")
-        # TODO: this is not tested.
-        # We need to investigate if it is better to return None instead of an
-        # empty string
-        response["title"] = title.text if title else ""
-
-        return response
-
-    def _extract_opengraph_data(self, request_body):
-        opengraph = OpenGraph()
-
-        opengraph.parser(request_body)
-
-        if opengraph.is_valid():
-            del opengraph["_url"]
-            return opengraph
-        else:
-            logger.warning("failed to extract OpenGraph data")
-            return None
-
-    def _extract_twitter_card(self, soup):
-        card = {}
-
-        for meta in soup.find_all("meta"):
-            name = meta.get("name", "")
-            if name.startswith("twitter:"):
-                items = name.split(":")
-                if len(items) < 2:
-                    msg = "Invalid twitter card value: twitter_card(%s)"
-                    logger.warning(msg, name)
-                    continue
-                card[":".join(items[1:])] = meta.get("content")
-
-        # if twitter card data could not be extracted then return None instead
-        # of an empty dictionary
-        if len(card) == 0:
-            logger.warning("failed to extract twitter card")
-            card = None
-
-        return card
-
-    def _extract_keywords(self, text):
-        keywords = self.rake.run(text)
-
-        keywords = {
-            keyword: score
-            for keyword, score in keywords
-        }
-
-        return keywords
+        return result.data
 
     def process_content(self, content):
-        soup = BeautifulSoup(content, "html.parser")
+        content = self._deserialize_content(content)
+        html_analysis_result = self.__html_analyser.analyse(content)
 
-        extracted_content = self._extract_page_content(content)
-        page_data = self._extract_page_data(soup)
-        opengraph_data = self._extract_opengraph_data(content)
-        twitter_card = self._extract_twitter_card(soup)
-
-        if (isinstance(extracted_content["text"], str) and
-                len(extracted_content["text"]) != 0):
-            extracted_content["keywords"] = self._extract_keywords(
-                extracted_content["text"])
-
-        content_response = {}
-        content_response.update(extracted_content)
-        content_response.update(page_data)
+        # we will remote the "_url" key from the opengraph data in order to
+        # remain backwards compatible
+        opengraph = html_analysis_result.social_network_data.opengraph
+        if opengraph is not None and "_url" in opengraph:
+            del opengraph["_url"]
 
         return {
-            "content": content_response,
+            "content": {
+                "text": html_analysis_result.text,
+                "title": html_analysis_result.title,
+                "keywords": html_analysis_result.keywords,
+            },
             "social": {
-                "opengraph": opengraph_data,
-                "twitter": twitter_card
+                "opengraph":
+                    html_analysis_result.social_network_data.opengraph,
+                "twitter": html_analysis_result.social_network_data.twitter
             }
         }

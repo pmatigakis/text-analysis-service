@@ -3,7 +3,7 @@ import logging
 
 from tas.web import error_codes
 from tas.analysis.exceptions import (
-    UnsupportedContentType, HTMLContentProcessorError
+    UnsupportedContentType, HTMLContentProcessorError, InvalidHTMLContent
 )
 
 from falcon import HTTPBadRequest, HTTPNotFound
@@ -55,7 +55,8 @@ class ProcessHTMLErrorHandler(ErrorHandlerBase):
         error_handlers = {
             UnsupportedContentType: self._handle_unsupported_content_type,
             HTMLContentProcessorError:
-                self._handle_html_content_processor_error
+                self._handle_html_content_processor_error,
+            InvalidHTMLContent: self._handle_invalid_html_content_error
         }
 
         super(ProcessHTMLErrorHandler, self).__init__(error_handlers)
@@ -74,13 +75,22 @@ class ProcessHTMLErrorHandler(ErrorHandlerBase):
             code=error_codes.INVALID_REQUEST_BODY
         )
 
+    def _handle_invalid_html_content_error(self, exception):
+        logger.warning("invalid html content: errors=%s", exception.errors)
+
+        return HTTPBadRequest(
+            title='Invalid request body',
+            description="The html analysis request contained invalid data",
+            code=error_codes.INVALID_HTML_CONTENT
+        )
+
     def _handle_html_content_processor_error(self, exception):
         logger.warning("failed to extract content ")
 
         return HTTPNotFound(
             title="Processing error",
             description="Failed to process content",
-            code=error_codes.TAS_ERROR
+            code=error_codes.HTML_CONTENT_PROCESSING_ERROR
         )
 
     def handle_unknown_exception(self, exception):

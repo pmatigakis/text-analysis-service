@@ -4,11 +4,9 @@ from unittest.mock import patch
 import json
 
 from falcon.testing import TestCase
-from opengraph.opengraph import OpenGraph
 
 from tas.web.application import create_app
 from tas.web import error_codes
-from tas.analysis.processors import HTMLContentProcessorError
 
 
 page_contents = """
@@ -47,7 +45,13 @@ page_contents = """
 
 request_body = {
     "content_type": "text/html",
-    "content": page_contents
+    "content": {
+        "url": "http://www.example.com",
+        "html": page_contents,
+        "headers": {
+            "Content-Type": "text/html"
+        }
+    }
 }
 
 
@@ -113,10 +117,10 @@ class ProcessHtmlTests(ResourceTestCase):
             }
         )
 
-    @patch("tas.analysis.processors.fulltext")
-    def test_failed_to_extract_page_content_newspaper_raised_exception(
-            self, fulltext_mock):
-        fulltext_mock.side_effect = Exception()
+    @patch("tas.web.routes.ContentAnalyser.process_content")
+    def test_content_analyser_raised_unknown_exception(
+            self, process_content_mock):
+        process_content_mock.side_effect = Exception
 
         response = self.simulate_post(
             "/api/v1/process",
@@ -137,9 +141,8 @@ class ProcessHtmlTests(ResourceTestCase):
         )
 
     @patch("tas.analysis.operations.HTMLContentProcessor.process_content")
-    def test_failed_to_extract_page_content(
-            self, process_content_mock):
-        process_content_mock.side_effect = HTMLContentProcessorError()
+    def test_html_processor_raised_exception(self, process_content_mock):
+        process_content_mock.side_effect = Exception
 
         response = self.simulate_post(
             "/api/v1/process",
@@ -159,85 +162,34 @@ class ProcessHtmlTests(ResourceTestCase):
             }
         )
 
-    @patch("tas.analysis.processors.fulltext")
-    def test_page_does_not_have_any_content(self, fulltext_mock):
-        fulltext_mock.return_value = None
+    def test_html_analysis_request_content_is_invalid(self):
+        invalid_request_body = {
+            "content_type": "text/html",
+            "content": {
+                # "url": "http://www.example.com",
+                "html": page_contents,
+                "headers": {
+                    "Content-Type": "text/html"
+                }
+            }
+        }
 
         response = self.simulate_post(
-            "/api/v1/process", body=page_contents)
+            "/api/v1/process",
+            body=json.dumps(invalid_request_body),
+            headers={
+                "Content-Type": "application/json"
+            }
+        )
 
         self.assertEqual(response.status_code, 400)
         self.assertDictEqual(
             response.json,
             {
-                "code": 1004,
-                "description": "The contents of the request body could not "
-                               "be decoded",
-                "title": "Invalid request body"
-            }
-        )
-
-    @patch.object(OpenGraph, "is_valid")
-    def test_failed_to_extract_opengraph_data(self, is_valid_mock):
-        is_valid_mock.return_value = False
-
-        response = self.simulate_post(
-            "/api/v1/process",
-            body=json.dumps(request_body),
-            headers={
-                "Content-Type": "application/json"
-            }
-        )
-
-        self.assertIn("social", response.json)
-        self.assertIn("opengraph", response.json["social"])
-
-        self.assertIsNone(response.json["social"]["opengraph"])
-
-    @patch("tas.analysis.operations.HTMLContentProcessor."
-           "_extract_page_content")
-    def test_failed_to_extract_opengraph_data_when_exception_is_raised(
-            self, extract_page_content_mock):
-        extract_page_content_mock.side_effect = Exception
-
-        response = self.simulate_post(
-            "/api/v1/process",
-            body=json.dumps(request_body),
-            headers={
-                "Content-Type": "application/json"
-            }
-        )
-
-        self.assertDictEqual(
-            response.json,
-            {
-                'code': 1003,
-                'description': 'Failed to process content',
-                'title': 'Processing error'
-
-            }
-        )
-
-    @patch("tas.analysis.operations.HTMLContentProcessor."
-           "_extract_page_content")
-    def test_failed_to_extract_keywords_when_exception_is_raised(
-            self, extract_keywords_mock):
-        extract_keywords_mock.side_effect = Exception
-
-        response = self.simulate_post(
-            "/api/v1/process",
-            body=json.dumps(request_body),
-            headers={
-                "Content-Type": "application/json"
-            }
-        )
-
-        self.assertDictEqual(
-            response.json,
-            {
-                'description': 'Failed to process content',
-                'title': 'Processing error',
-                'code': 1003
+                'code': error_codes.INVALID_HTML_CONTENT,
+                'description': 'The html analysis request contained invalid '
+                               'data',
+                'title': 'Invalid request body'
             }
         )
 
@@ -285,6 +237,35 @@ class ProcessHtmlTests(ResourceTestCase):
                 "code": 1004,
                 "description": "The contents of the request are not in the "
                                "appropriate format",
+                "title": "Invalid request body"
+            }
+        )
+
+    def test_request_body_does_not_have_any_content(self):
+        response = self.simulate_post(
+            "/api/v1/process", body="")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertDictEqual(
+            response.json,
+            {
+                "code": error_codes.EMPTY_REQUEST_BODY,
+                "description": "The contents of a web page must be provided",
+                "title": "Empty request body"
+            }
+        )
+
+    def test_request_body_is_not_json(self):
+        response = self.simulate_post(
+            "/api/v1/process", body="hello world")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertDictEqual(
+            response.json,
+            {
+                "code": error_codes.INVALID_REQUEST_BODY,
+                "description": "The contents of the request body could not be "
+                               "decoded",
                 "title": "Invalid request body"
             }
         )

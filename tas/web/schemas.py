@@ -6,8 +6,7 @@ process_html_payload_schema = {
             "type": "string"
         },
         "content": {
-            "type": "string",
-            "minLength": 1
+            "type": "object"
         }
     },
     "required": ["content_type", "content"]
