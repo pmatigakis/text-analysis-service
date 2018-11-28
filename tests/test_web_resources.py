@@ -44,7 +44,7 @@ page_contents = """
 """
 
 request_body = {
-    "content_type": "text/html",
+    "content_type": "html",
     "content": {
         "url": "http://www.example.com",
         "html": page_contents,
@@ -164,7 +164,7 @@ class ProcessHtmlTests(ResourceTestCase):
 
     def test_html_analysis_request_content_is_invalid(self):
         invalid_request_body = {
-            "content_type": "text/html",
+            "content_type": "html",
             "content": {
                 # "url": "http://www.example.com",
                 "html": page_contents,
