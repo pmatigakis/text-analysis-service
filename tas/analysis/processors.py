@@ -72,7 +72,7 @@ class HTMLContentProcessor(ContentProcessor):
                 "readability_scores": html_analysis_result.readability_scores,
                 "statistics": {
                     # we need to have text-analysis-helpers return these values
-                    # as python types instead on numpy types
+                    # as python types instead of numpy types
                     "average_sentence_word_count": float(html_analysis_result.statistics.average_sentence_word_count),  # noqa
                     "max_sentence_word_count": int(html_analysis_result.statistics.max_sentence_word_count),  # noqa
                     "mean_sentence_word_count": float(html_analysis_result.statistics.mean_sentence_word_count),  # noqa
