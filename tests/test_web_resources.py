@@ -89,12 +89,12 @@ class ProcessHtmlTests(ResourceTestCase):
         # TODO: for the moment just check if there are any keywords
         self.assertTrue(len(response.json["content"]["keywords"]) > 0)
 
-        self.assertIn("social", response.json)
-        self.assertIn("opengraph", response.json["social"])
-        self.assertIn("twitter", response.json["social"])
+        self.assertIn("social", response.json["content"])
+        self.assertIn("opengraph", response.json["content"]["social"])
+        self.assertIn("twitter", response.json["content"]["social"])
 
         self.assertDictEqual(
-            response.json["social"]["opengraph"],
+            response.json["content"]["social"]["opengraph"],
             {
                 'description': 'test page description',
                 'title': 'test page title',
@@ -106,7 +106,7 @@ class ProcessHtmlTests(ResourceTestCase):
         )
 
         self.assertDictEqual(
-            response.json["social"]["twitter"],
+            response.json["content"]["social"]["twitter"],
             {
                 'description': 'test card description',
                 'creator': '@user',

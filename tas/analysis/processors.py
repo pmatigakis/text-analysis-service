@@ -62,10 +62,10 @@ class HTMLContentProcessor(ContentProcessor):
                 "text": html_analysis_result.text,
                 "title": html_analysis_result.title,
                 "keywords": html_analysis_result.keywords,
-            },
-            "social": {
-                "opengraph":
-                    html_analysis_result.social_network_data.opengraph,
-                "twitter": html_analysis_result.social_network_data.twitter
+                "social": {
+                    "opengraph":
+                        html_analysis_result.social_network_data.opengraph,
+                    "twitter": html_analysis_result.social_network_data.twitter
+                }
             }
         }
