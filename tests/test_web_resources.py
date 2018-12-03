@@ -117,6 +117,78 @@ class ProcessHtmlTests(ResourceTestCase):
             }
         )
 
+        self.assertIn("summary", response.json["content"])
+        self.assertEqual(
+            response.json["content"]["summary"],
+            "Suspendisse nec felis ullamcorper, pellentesque arcu ut, "
+            "elementum erat.\nDonec pellentesque lectus malesuada arcu "
+            "feugiat, et condimentum mauris tincidunt.\nNullam viverra ex "
+            "nec ipsum luctus porta."
+        )
+
+        self.assertIn("readability_scores", response.json["content"])
+        self.assertDictEqual(
+            response.json["content"]["readability_scores"],
+            {
+                "automated_readability_index": 11.0,
+                "coleman_liau_index": 15.33,
+                "dale_chall_readability_score": 11.27,
+                "difficult_words": 55,
+                "flesch_kincaid_grade": 8.8,
+                "flesch_reading_ease": 46.44,
+                "gunning_fog": 23.53333333333333,
+                "linsear_write_formula": 2.875,
+                "smog_index": 10.2,
+                "text_standard": "10th and 11th grade"
+            }
+        )
+
+        self.assertIn("statistics", response.json["content"])
+        self.assertDictEqual(
+            response.json["content"]["statistics"],
+            {
+                "average_sentence_word_count": 9.466666666666667,
+                "max_sentence_word_count": 14,
+                "mean_sentence_word_count": 9.466666666666667,
+                "median_sentence_word_count": 9.0,
+                "min_sentence_word_count": 5,
+                "sentence_count": 15,
+                "sentence_word_count_std": 2.8487814158961995,
+                "sentence_word_count_variance": 8.115555555555554,
+                "word_count": 142
+            }
+        )
+
+        self.assertIn("named_entities", response.json["content"])
+        self.assertDictEqual(
+            response.json["content"]["named_entities"],
+            {
+                'GPE': sorted([
+                    'Morbi', 'Nullam', 'Aliquam', 'Vestibulum', 'Duis',
+                    'Aenean', 'Cras', 'Suspendisse', 'Donec', 'Lorem',
+                    'Vivamus', 'Pellentesque'
+                ])
+            }
+        )
+
+        self.assertIn("top_image", response.json["content"])
+        self.assertEqual(
+            response.json["content"]["top_image"],
+            "https://example.com/image.png"
+        )
+
+        self.assertIn("movies", response.json["content"])
+        self.assertEqual(response.json["content"]["movies"], [])
+
+        self.assertIn("images", response.json["content"])
+        self.assertEqual(
+            response.json["content"]["images"],
+            ["https://example.com/image.png"]
+        )
+
+        self.assertIn("html", response.json["content"])
+        self.assertEqual(response.json["content"]["html"], page_contents)
+
     @patch("tas.web.routes.ContentAnalyser.process_content")
     def test_content_analyser_raised_unknown_exception(
             self, process_content_mock):
