@@ -9,3 +9,4 @@ jsonschema==2.6.0
 -e git+https://github.com/pmatigakis/RAKE.git#egg=RAKE
 -e git+https://github.com/pmatigakis/text-analysis-helpers.git@v0.1.0#egg=text-analysis-helpers
 marshmallow==2.16.3
+raven==6.1.0

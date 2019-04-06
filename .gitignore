@@ -9,3 +9,4 @@ cover/
 *.log
 docs/build/
 .eggs/
+.env

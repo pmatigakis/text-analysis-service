@@ -1,7 +1,9 @@
+from distutils.util import strtobool
 import os
 import re
 
-DEBUG = False
+DEBUG = strtobool(os.getenv("DEBUG", "False"))
+TESTING = strtobool(os.getenv("TESTING", "False"))
 
 KEYWORD_STOP_LIST = "SmartStoplist.txt"
 
@@ -29,10 +31,26 @@ STATSD_PORT = os.getenv("STATSD_PORT", 8125)
 
 CONSUL_HOST = os.getenv("CONSUL_HOST")
 CONSUL_PORT = os.getenv("CONSUL_PORT", 8500)
-CONSUL_SCHEME = "http"
-CONSUL_VERIFY_SSL = True
+CONSUL_SCHEME = os.getenv("CONSUL_SCHEME", "http")
+CONSUL_VERIFY_SSL = strtobool(os.getenv("CONSUL_VERIFY_SSL", "True"))
 CONSUL_HEALTH_INTERVAL = "10s"
 CONSUL_HEALTH_TIMEOUT = "5s"
+
+__handlers = {
+    'console': {
+        'level': os.getenv("CONSOLE_LOG_LEVEL", "INFO"),
+        'class': 'logging.StreamHandler',
+        'formatter': 'verbose'
+    }
+}
+
+__sentry_dsn = os.getenv("SENTRY_DSN")
+if __sentry_dsn:
+    __handlers["sentry"] = {
+        'level': os.getenv("SENTRY_LOG_LEVEL", "ERROR"),
+        'class': 'raven.handlers.logging.SentryHandler',
+        'dsn': __sentry_dsn
+    }
 
 LOGGING = {
     'version': 1,
@@ -42,20 +60,14 @@ LOGGING = {
             'format': "%(asctime)s %(levelname)s [%(process)d:%(thread)d] %(name)s [%(pathname)s:%(funcName)s:%(lineno)d] %(message)s"
         }
     },
-    'handlers': {
-        'console': {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose'
-        }
-    },
+    'handlers': __handlers,
     'loggers': {
         'tas': {
-            'handlers': ['console'],
+            'handlers': __handlers.keys(),
             'propagate': True
         },
         'metricslib': {
-            'handlers': ['console'],
+            'handlers': __handlers.keys(),
             'propagate': True
         }
     },
