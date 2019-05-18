@@ -5,6 +5,7 @@ import json
 
 from falcon.testing import TestCase
 
+from tas import __VERSION__
 from tas.web.application import create_app
 from tas.web import error_codes
 
@@ -370,7 +371,7 @@ class InformationEndpointTests(ResourceTestCase):
                 "host": "127.0.0.1",
                 "port": 8000,
                 "service": "tas",
-                "version": "0.7.0"
+                "version": __VERSION__
             }
         )
 

@@ -10,3 +10,5 @@ cover/
 docs/build/
 .eggs/
 .env
+build/
+dist/
