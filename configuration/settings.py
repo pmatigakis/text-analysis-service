@@ -2,22 +2,28 @@ from distutils.util import strtobool
 import os
 import re
 
-DEBUG = strtobool(os.getenv("DEBUG", "False"))
-TESTING = strtobool(os.getenv("TESTING", "False"))
+from dotenv import load_dotenv
+
+load_dotenv()
+
+DEBUG = bool(strtobool(os.getenv("DEBUG", "False")))
+TESTING = bool(strtobool(os.getenv("TESTING", "False")))
 
 KEYWORD_STOP_LIST = "SmartStoplist.txt"
 
-host_pattern = re.compile(r"^(.+?)\s+{}$".format(os.getenv("HOSTNAME")))
-host = None
-with open("/etc/hosts", "r") as f:
-    for line in f:
-        m = host_pattern.match(line)
-        if m:
-            host = m.group(1)
-            break
-
+host = os.getenv("HOST")
 if host is None:
-    raise RuntimeError("failed to find the container ip address")
+    host_pattern = re.compile(r"^(.+?)\s+{}$".format(os.getenv("HOSTNAME")))
+
+    with open("/etc/hosts", "r") as f:
+        for line in f:
+            m = host_pattern.match(line)
+            if m:
+                host = m.group(1)
+                break
+
+    if host is None:
+        raise RuntimeError("failed to find the container ip address")
 
 HOST = host
 PORT = int(os.getenv("PORT", 8020))
@@ -27,12 +33,12 @@ WORKER_MAX_REQUESTS_JITTER = int(os.getenv("WORKER_MAX_REQUESTS_JITTER", 30))
 WORKERS = int(os.getenv("WORKERS", 4))
 
 STATSD_HOST = os.getenv("STATSD_HOST")
-STATSD_PORT = os.getenv("STATSD_PORT", 8125)
+STATSD_PORT = int(os.getenv("STATSD_PORT", 8125))
 
 CONSUL_HOST = os.getenv("CONSUL_HOST")
-CONSUL_PORT = os.getenv("CONSUL_PORT", 8500)
+CONSUL_PORT = int(os.getenv("CONSUL_PORT", 8500))
 CONSUL_SCHEME = os.getenv("CONSUL_SCHEME", "http")
-CONSUL_VERIFY_SSL = strtobool(os.getenv("CONSUL_VERIFY_SSL", "True"))
+CONSUL_VERIFY_SSL = bool(strtobool(os.getenv("CONSUL_VERIFY_SSL", "True")))
 CONSUL_HEALTH_INTERVAL = "10s"
 CONSUL_HEALTH_TIMEOUT = "5s"
 
