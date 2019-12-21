@@ -16,7 +16,7 @@ git clone https://github.com/pmatigakis/text-analysis-service.git
 cd text-analysis-service
 git fetch --all
 git checkout master
-pip install .
+pip install -r requirements.txt .
 ```
 
 You will have to download some NLTK data.

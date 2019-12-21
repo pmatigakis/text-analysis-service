@@ -6,6 +6,7 @@ ADD tas /app/tas
 COPY setup.py /app
 COPY requirements.txt /app
 COPY requirements-test.txt /app
+COPY MANIFEST.in /app
 COPY configuration/settings.py /app/configuration/
 
 RUN pip install -r requirements.txt .
