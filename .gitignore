@@ -12,3 +12,4 @@ docs/build/
 .env
 build/
 dist/
+examples/result.json

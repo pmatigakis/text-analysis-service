@@ -6,11 +6,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# run the classifier in debug model
 DEBUG = bool(strtobool(os.getenv("DEBUG", "False")))
+
+# run the classifier in testing model. Not doing something special at the moment
+# so you can ignore this setting
 TESTING = bool(strtobool(os.getenv("TESTING", "False")))
 
 KEYWORD_STOP_LIST = "SmartStoplist.txt"
 
+# set the address that the server will listen to. With a bit of ugly hacking
+# we will get the address to use when the server runs inside a docker container
 host = os.getenv("HOST")
 if host is None:
     host_pattern = re.compile(r"^(.+?)\s+{}$".format(os.getenv("HOSTNAME")))
@@ -26,15 +32,24 @@ if host is None:
         raise RuntimeError("failed to find the container ip address")
 
 HOST = host
+
+# set the port where the server will listen to
 PORT = int(os.getenv("PORT", 8020))
 
+# the number of request a worker will serve before it is restarted
 WORKER_MAX_REQUESTS = int(os.getenv("WORKER_MAX_REQUESTS", 500))
+
+# set the worker request jitte
 WORKER_MAX_REQUESTS_JITTER = int(os.getenv("WORKER_MAX_REQUESTS_JITTER", 30))
+
+# set the number of workers to start
 WORKERS = int(os.getenv("WORKERS", 4))
 
+# send statistics to this statsd server
 STATSD_HOST = os.getenv("STATSD_HOST")
 STATSD_PORT = int(os.getenv("STATSD_PORT", 8125))
 
+# the settings for the consul health checks
 CONSUL_HOST = os.getenv("CONSUL_HOST")
 CONSUL_PORT = int(os.getenv("CONSUL_PORT", 8500))
 CONSUL_SCHEME = os.getenv("CONSUL_SCHEME", "http")
@@ -50,6 +65,7 @@ __handlers = {
     }
 }
 
+# set the sentry dsn to use for exception logging
 __sentry_dsn = os.getenv("SENTRY_DSN")
 if __sentry_dsn:
     __handlers["sentry"] = {
@@ -58,6 +74,7 @@ if __sentry_dsn:
         'dsn': __sentry_dsn
     }
 
+# configure the loggers
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
