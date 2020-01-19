@@ -20,17 +20,14 @@ def main():
     page_response = requests.get(args.url, timeout=10)
     page_response.raise_for_status()
 
-    tas_process_url = urljoin(args.tas_address, "api/v1/process")
+    tas_process_url = urljoin(args.tas_address, "api/v2/process/html")
     tas_response = requests.post(
         tas_process_url,
         timeout=10,
         json={
-            "content_type": "html",
-            "content": {
-                "url": args.url,
-                "headers": dict(page_response.headers),
-                "html": page_response.text
-            }
+            "url": args.url,
+            "headers": dict(page_response.headers),
+            "html": page_response.text
         }
     )
 
