@@ -25,3 +25,8 @@ class UnsupportedContentType(TASError):
         super(UnsupportedContentType, self).__init__(content_type)
 
         self.content_type = content_type
+
+
+class HtmlContentProcessingError(HTMLContentProcessorError):
+    """Exception that is raised when we fail to analyse the html contents"""
+    pass

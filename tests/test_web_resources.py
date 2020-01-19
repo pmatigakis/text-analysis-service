@@ -4,6 +4,7 @@ from unittest.mock import patch
 import json
 
 from falcon.testing import TestCase
+from text_analysis_helpers.exceptions import HtmlAnalysisError
 
 from tas import __VERSION__
 from tas.web.application import create_app
@@ -216,6 +217,28 @@ class ProcessHtmlTests(ResourceTestCase):
     @patch("tas.analysis.operations.HTMLContentProcessor.process_content")
     def test_html_processor_raised_exception(self, process_content_mock):
         process_content_mock.side_effect = Exception
+
+        response = self.simulate_post(
+            "/api/v1/process",
+            body=json.dumps(request_body),
+            headers={
+                "Content-Type": "application/json"
+            }
+        )
+
+        self.assertEqual(response.status_code, 404)
+        self.assertDictEqual(
+            response.json,
+            {
+                'code': error_codes.TAS_ERROR,
+                'description': 'Failed to process content',
+                'title': 'Processing error'
+            }
+        )
+
+    @patch("tas.analysis.processors.HtmlAnalyser.analyse")
+    def test_html_analyser_raised_exception(self, analyse_mock):
+        analyse_mock.side_effect = HtmlAnalysisError
 
         response = self.simulate_post(
             "/api/v1/process",

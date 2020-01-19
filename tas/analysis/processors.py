@@ -1,9 +1,12 @@
 from abc import ABCMeta, abstractmethod
 import logging
 
+from text_analysis_helpers.exceptions import HtmlAnalysisError
 from text_analysis_helpers.html import HtmlAnalyser
 
-from tas.analysis.exceptions import InvalidHTMLContent
+from tas.analysis.exceptions import (
+    InvalidHTMLContent, HtmlContentProcessingError
+)
 from tas.analysis.schemas import WebPageSchema
 
 
@@ -49,9 +52,15 @@ class HTMLContentProcessor(ContentProcessor):
 
     def process_content(self, content):
         content = self._deserialize_content(content)
-        html_analysis_result = self.__html_analyser.analyse(content)
 
-        # we will remote the "_url" key from the opengraph data in order to
+        try:
+            html_analysis_result = self.__html_analyser.analyse(content)
+        except HtmlAnalysisError as e:
+            logger.error("failed to analyse content using the html analyser")
+
+            raise HtmlContentProcessingError() from e
+
+        # we will remove the "_url" key from the opengraph data in order to
         # remain backwards compatible
         opengraph = html_analysis_result.social_network_data.opengraph
         if opengraph is not None and "_url" in opengraph:
