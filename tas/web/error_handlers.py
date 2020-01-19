@@ -3,7 +3,7 @@ import logging
 
 from tas.web import error_codes
 from tas.analysis.exceptions import (
-    UnsupportedContentType, HTMLContentProcessorError, InvalidHTMLContent
+    HTMLContentProcessorError, InvalidHTMLContent
 )
 
 from falcon import HTTPBadRequest, HTTPNotFound
@@ -53,27 +53,12 @@ class ProcessHTMLErrorHandler(ErrorHandlerBase):
 
     def __init__(self):
         error_handlers = {
-            UnsupportedContentType: self._handle_unsupported_content_type,
             HTMLContentProcessorError:
                 self._handle_html_content_processor_error,
             InvalidHTMLContent: self._handle_invalid_html_content_error
         }
 
         super(ProcessHTMLErrorHandler, self).__init__(error_handlers)
-
-    def _handle_unsupported_content_type(self, exception):
-        logger.warning(
-            "unsupported request content type: content_type=%s",
-            exception.content_type
-        )
-
-        # this content type is not supported
-        return HTTPBadRequest(
-            title='Invalid request body',
-            description='The content type "{}" is not supported'.format(
-                exception.content_type),
-            code=error_codes.INVALID_REQUEST_BODY
-        )
 
     def _handle_invalid_html_content_error(self, exception):
         logger.warning("invalid html content: errors=%s", exception.errors)

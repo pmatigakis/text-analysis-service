@@ -48,19 +48,16 @@ tas-cli server
 
 # Analysing text
 
-The text analysis endpoint is available at `http://<HOST>:<PORT>/api/v1/process`.
-For the moment only analysis of html documents is supported. To process the
+For the moment only analysis of html documents is supported. The html analysis
+endpoint is available at `http://<HOST>:<PORT>/api/v2/process/html`. To process the
 contents of a web page execute a POST request with the following payload.
 
 ```json
 {
-    "content_type": "html",
-    "content": {
-        "url": "http://the-page-url.com",
-        "html": "the web page html goes here...",
-        "headers": {
-            "header-name": "add the headers of the response in this dictionary"
-        }
+    "url": "http://the-page-url.com",
+    "html": "the web page html goes here...",
+    "headers": {
+        "header-name": "add the headers of the response in this dictionary"
     }
 }
 ```

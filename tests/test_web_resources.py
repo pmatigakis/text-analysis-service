@@ -46,13 +46,10 @@ page_contents = """
 """
 
 request_body = {
-    "content_type": "html",
-    "content": {
-        "url": "http://www.example.com",
-        "html": page_contents,
-        "headers": {
-            "Content-Type": "text/html"
-        }
+    "url": "http://www.example.com",
+    "html": page_contents,
+    "headers": {
+        "Content-Type": "text/html"
     }
 }
 
@@ -71,7 +68,7 @@ class ResourceTestCase(TestCase):
 class ProcessHtmlTests(ResourceTestCase):
     def test_process_html(self):
         response = self.simulate_post(
-            "/api/v1/process",
+            "/api/v2/process/html",
             body=json.dumps(request_body),
             headers={
                 "Content-Type": "application/json"
@@ -191,35 +188,12 @@ class ProcessHtmlTests(ResourceTestCase):
         self.assertIn("html", response.json["content"])
         self.assertEqual(response.json["content"]["html"], page_contents)
 
-    @patch("tas.web.routes.ContentAnalyser.process_content")
-    def test_content_analyser_raised_unknown_exception(
-            self, process_content_mock):
-        process_content_mock.side_effect = Exception
-
-        response = self.simulate_post(
-            "/api/v1/process",
-            body=json.dumps(request_body),
-            headers={
-                "Content-Type": "application/json"
-            }
-        )
-
-        self.assertEqual(response.status_code, 404)
-        self.assertDictEqual(
-            response.json,
-            {
-                'code': error_codes.TAS_ERROR,
-                'description': 'Failed to process content',
-                'title': 'Processing error'
-            }
-        )
-
-    @patch("tas.analysis.operations.HTMLContentProcessor.process_content")
+    @patch("tas.web.routes.HTMLContentProcessor.process_content")
     def test_html_processor_raised_exception(self, process_content_mock):
         process_content_mock.side_effect = Exception
 
         response = self.simulate_post(
-            "/api/v1/process",
+            "/api/v2/process/html",
             body=json.dumps(request_body),
             headers={
                 "Content-Type": "application/json"
@@ -241,7 +215,7 @@ class ProcessHtmlTests(ResourceTestCase):
         analyse_mock.side_effect = HtmlAnalysisError
 
         response = self.simulate_post(
-            "/api/v1/process",
+            "/api/v2/process/html",
             body=json.dumps(request_body),
             headers={
                 "Content-Type": "application/json"
@@ -260,18 +234,15 @@ class ProcessHtmlTests(ResourceTestCase):
 
     def test_html_analysis_request_content_is_invalid(self):
         invalid_request_body = {
-            "content_type": "html",
-            "content": {
-                # "url": "http://www.example.com",
-                "html": page_contents,
-                "headers": {
-                    "Content-Type": "text/html"
-                }
+            # "url": "http://www.example.com",
+            "html": page_contents,
+            "headers": {
+                "Content-Type": "text/html"
             }
         }
 
         response = self.simulate_post(
-            "/api/v1/process",
+            "/api/v2/process/html",
             body=json.dumps(invalid_request_body),
             headers={
                 "Content-Type": "application/json"
@@ -282,55 +253,7 @@ class ProcessHtmlTests(ResourceTestCase):
         self.assertDictEqual(
             response.json,
             {
-                'code': error_codes.INVALID_HTML_CONTENT,
-                'description': 'The html analysis request contained invalid '
-                               'data',
-                'title': 'Invalid request body'
-            }
-        )
-
-    def test_request_content_type_is_not_supported(self):
-        invalid_request_body = request_body.copy()
-        invalid_request_body["content_type"] = "text/plain"
-
-        response = self.simulate_post(
-            "/api/v1/process",
-            body=json.dumps(invalid_request_body),
-            headers={
-                "Content-Type": "application/json"
-            }
-        )
-
-        self.assertEqual(response.status_code, 400)
-
-        self.assertDictEqual(
-            response.json,
-            {
-                "code": 1004,
-                "description": 'The content type "text/plain" is not '
-                               'supported',
-                "title": "Invalid request body"
-            }
-        )
-
-    def test_invalid_request_body_format(self):
-        invalid_request_body = request_body.copy()
-        del invalid_request_body["content_type"]
-
-        response = self.simulate_post(
-            "/api/v1/process",
-            body=json.dumps(invalid_request_body),
-            headers={
-                "Content-Type": "application/json"
-            }
-        )
-
-        self.assertEqual(response.status_code, 400)
-
-        self.assertDictEqual(
-            response.json,
-            {
-                "code": 1004,
+                'code': error_codes.INVALID_REQUEST_BODY,
                 "description": "The contents of the request are not in the "
                                "appropriate format",
                 "title": "Invalid request body"
@@ -339,7 +262,7 @@ class ProcessHtmlTests(ResourceTestCase):
 
     def test_request_body_does_not_have_any_content(self):
         response = self.simulate_post(
-            "/api/v1/process", body="")
+            "/api/v2/process/html", body="")
 
         self.assertEqual(response.status_code, 400)
         self.assertDictEqual(
@@ -353,7 +276,7 @@ class ProcessHtmlTests(ResourceTestCase):
 
     def test_request_body_is_not_json(self):
         response = self.simulate_post(
-            "/api/v1/process", body="hello world")
+            "/api/v2/process/html", body="hello world")
 
         self.assertEqual(response.status_code, 400)
         self.assertDictEqual(

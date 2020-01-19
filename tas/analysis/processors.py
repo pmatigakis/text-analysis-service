@@ -21,7 +21,7 @@ class ContentProcessor(object):
     def process_content(self, content):
         """Process the request content
 
-        :param str content: the request content
+        :param dict content: the request content
         :rtype: dict
         :return: the processing result
         """

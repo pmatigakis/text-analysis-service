@@ -2,12 +2,15 @@ process_html_payload_schema = {
     "title": "ProcessHTML",
     "type": "object",
     "properties": {
-        "content_type": {
+        "url": {
             "type": "string"
         },
-        "content": {
+        "html": {
+            "type": "string"
+        },
+        "headers": {
             "type": "object"
         }
     },
-    "required": ["content_type", "content"]
+    "required": ["url", "html", "headers"]
 }
