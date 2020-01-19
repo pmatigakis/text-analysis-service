@@ -83,10 +83,13 @@ class ProcessHtmlTests(ResourceTestCase):
         self.assertEqual("test page", response.json["content"]["title"])
 
         self.assertIn("keywords", response.json["content"])
-        self.assertIsInstance(response.json["content"]["keywords"], dict)
+        self.assertIsInstance(response.json["content"]["keywords"], list)
 
         # TODO: for the moment just check if there are any keywords
         self.assertTrue(len(response.json["content"]["keywords"]) > 0)
+        self.assertIsInstance(response.json["content"]["keywords"][0], dict)
+        self.assertIn("keyword", response.json["content"]["keywords"][0])
+        self.assertIn("score", response.json["content"]["keywords"][0])
 
         self.assertIn("social", response.json["content"])
         self.assertIn("opengraph", response.json["content"]["social"])

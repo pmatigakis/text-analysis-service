@@ -71,7 +71,17 @@ class HTMLContentProcessor(ContentProcessor):
                 "text": html_analysis_result.text,
                 "html": html_analysis_result.html,
                 "title": html_analysis_result.title,
-                "keywords": html_analysis_result.keywords,
+                "keywords": [
+                    {
+                        "keyword": keyword,
+                        "score": score
+                    }
+                    for keyword, score in sorted(
+                        html_analysis_result.keywords.items(),
+                        key=lambda item: item[1],
+                        reverse=True
+                    )
+                ],
                 "social": {
                     "opengraph":
                         html_analysis_result.social_network_data.opengraph,
