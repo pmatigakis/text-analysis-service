@@ -1,7 +1,6 @@
 falcon==1.1.0
 python-consul==0.7.0
 gunicorn==19.7.1
-Sphinx==1.6.2
 statsd==3.2.1
 jsonschema==2.6.0
 -e git+https://github.com/topicaxis/metricslib.git@v0.1.0#egg=metricslib
