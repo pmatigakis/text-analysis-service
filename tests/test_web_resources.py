@@ -47,10 +47,7 @@ page_contents = """
 
 request_body = {
     "url": "http://www.example.com",
-    "html": page_contents,
-    "headers": {
-        "Content-Type": "text/html"
-    }
+    "html": page_contents
 }
 
 
@@ -235,10 +232,7 @@ class ProcessHtmlTests(ResourceTestCase):
     def test_html_analysis_request_content_is_invalid(self):
         invalid_request_body = {
             # "url": "http://www.example.com",
-            "html": page_contents,
-            "headers": {
-                "Content-Type": "text/html"
-            }
+            "html": page_contents
         }
 
         response = self.simulate_post(

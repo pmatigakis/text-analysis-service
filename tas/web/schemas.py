@@ -7,10 +7,7 @@ process_html_payload_schema = {
         },
         "html": {
             "type": "string"
-        },
-        "headers": {
-            "type": "object"
         }
     },
-    "required": ["url", "html", "headers"]
+    "required": ["url", "html"]
 }

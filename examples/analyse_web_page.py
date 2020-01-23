@@ -26,7 +26,6 @@ def main():
         timeout=10,
         json={
             "url": args.url,
-            "headers": dict(page_response.headers),
             "html": page_response.text
         }
     )
