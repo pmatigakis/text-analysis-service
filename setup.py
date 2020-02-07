@@ -24,7 +24,7 @@ def get_test_requirements():
 
 setup(
     name="Text analysis service",
-    version="0.10.2",
+    version="0.10.3",
     packages=find_packages(exclude=["tests"]),
     include_package_data=True,
     zip_safe=False,
