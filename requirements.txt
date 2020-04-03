@@ -3,7 +3,7 @@ python-consul==0.7.0
 gunicorn==19.7.1
 statsd==3.2.1
 jsonschema==2.6.0
--e git+https://github.com/topicaxis/metricslib.git@v0.1.0#egg=metricslib
+-e git+https://github.com/pmatigakis/metricslib.git@v0.1.0#egg=metricslib
 -e git+https://github.com/topicaxis/opengraph.git#egg=opengraph
 -e git+https://github.com/topicaxis/RAKE.git#egg=RAKE
 -e git+https://github.com/pmatigakis/text-analysis-helpers.git@v0.2.1#egg=text-analysis-helpers
